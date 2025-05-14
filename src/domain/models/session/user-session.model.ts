@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto';
+import { ConfigService } from '@nestjs/config';
 
 export class UserSession {
+    private static configService = new ConfigService();
+
     constructor(
         public readonly sessionId: string,
         public readonly userId: string,
@@ -10,6 +13,12 @@ export class UserSession {
         public readonly createdAt: Date,
         public readonly logoutAt?: Date
     ) {}
+
+    private static getLocalDate(date?: Date): Date {
+        const timezone = this.configService.get('LOCAL') || 'America/Buenos_Aires';
+        const now = date || new Date();
+        return new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+    }
 
     static create(
         userId: string,
@@ -26,8 +35,8 @@ export class UserSession {
             deviceId,
             ipAddress,
             userAgent,
-            createdAt || new Date(),
-            logoutAt
+            this.getLocalDate(createdAt),
+            logoutAt ? this.getLocalDate(logoutAt) : undefined
         );
     }
 
@@ -39,7 +48,7 @@ export class UserSession {
             this.ipAddress,
             this.userAgent,
             this.createdAt,
-            logoutAt
+            UserSession.getLocalDate(logoutAt)
         );
     }
 } 

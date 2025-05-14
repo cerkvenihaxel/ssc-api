@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
 import { IUserSessionRepository } from '../../../domain/repositories/session/user-session.repository';
 import { UserSession } from '../../../domain/models/session/user-session.model';
+import { DateUtils } from '../../utils/date.utils';
 
 @Injectable()
 export class PostgresUserSessionRepository implements IUserSessionRepository {
@@ -19,7 +20,7 @@ export class PostgresUserSessionRepository implements IUserSessionRepository {
                 session.deviceId,
                 session.ipAddress,
                 session.userAgent,
-                session.createdAt
+                DateUtils.formatForPostgres(session.createdAt)
             ]
         );
 
@@ -54,7 +55,10 @@ export class PostgresUserSessionRepository implements IUserSessionRepository {
             SET logout_at = $1
             WHERE session_id = $2
             RETURNING *`,
-            [session.logoutAt, session.sessionId]
+            [
+                session.logoutAt ? DateUtils.formatForPostgres(session.logoutAt) : null,
+                session.sessionId
+            ]
         );
 
         if (result.rows.length === 0) {
@@ -71,8 +75,8 @@ export class PostgresUserSessionRepository implements IUserSessionRepository {
             row.device_id,
             row.ip_address,
             row.user_agent,
-            row.created_at,
-            row.logout_at
+            DateUtils.toLocalTimezone(row.created_at),
+            row.logout_at ? DateUtils.toLocalTimezone(row.logout_at) : undefined
         );
     }
 } 
