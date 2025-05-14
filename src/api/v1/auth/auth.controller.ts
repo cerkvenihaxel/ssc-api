@@ -3,11 +3,15 @@ import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
 import { AuthService } from '../../../application/services/auth/auth.service';
 import { RequestMagicLinkDto } from './dtos/magiclink/request-magic-link.dto';
 import { VerifyMagicLinkDto } from './dtos/magiclink/verify-magic-link.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('Autenticación')
 @Controller('v1/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService
+  ) {}
 
   @ApiOperation({ summary: 'Solicitar un magic link de acceso' })
   @ApiResponse({ 
@@ -84,7 +88,13 @@ export class AuthController {
       throw new UnauthorizedException('No hay token de acceso');
     }
     const token = auth.split(' ')[1];
-    await this.authService.validateToken(token);
-    return { message: 'Sesión cerrada exitosamente' };
+    
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+      await this.authService.logout(payload.sessionId);
+      return { message: 'Sesión cerrada exitosamente' };
+    } catch (error) {
+      throw new UnauthorizedException('Token no válido');
+    }
   }
 } 

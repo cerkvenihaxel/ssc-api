@@ -1,17 +1,21 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { AuthController } from './auth.controller';
 import { AuthService } from '../../../application/services/auth/auth.service';
 import { PostgresUserRepository } from '../../../infrastructure/repositories/user/user.repository';
 import { PostgresMagicLinkRepository } from '../../../infrastructure/repositories/magiclink/magic-link.repository';
+import { PostgresUserSessionRepository } from '../../../infrastructure/repositories/session/user-session.repository';
+import { JwtStrategy } from '../../strategies/jwt.strategy';
 import { Pool } from 'pg';
 
 @Module({
   imports: [
     ConfigModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -51,6 +55,7 @@ import { Pool } from 'pg';
   controllers: [AuthController],
   providers: [
     AuthService,
+    JwtStrategy,
     {
       provide: 'IUserRepository',
       useClass: PostgresUserRepository,
@@ -58,6 +63,10 @@ import { Pool } from 'pg';
     {
       provide: 'IMagicLinkRepository',
       useClass: PostgresMagicLinkRepository,
+    },
+    {
+      provide: 'IUserSessionRepository',
+      useClass: PostgresUserSessionRepository,
     },
     {
       provide: Pool,
@@ -73,6 +82,6 @@ import { Pool } from 'pg';
       inject: [ConfigService],
     },
   ],
-  exports: [AuthService],
+  exports: [AuthService, JwtStrategy, PassportModule, JwtModule],
 })
 export class AuthModule {} 

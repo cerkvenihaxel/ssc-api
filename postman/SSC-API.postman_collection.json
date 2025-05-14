@@ -237,6 +237,268 @@
 					]
 				}
 			]
+		},
+		{
+			"name": "Permisos",
+			"description": "Endpoints relacionados con la gestión de permisos",
+			"item": [
+				{
+					"name": "Listar Permisos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/permisos",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "permisos"]
+						},
+						"description": "Obtiene la lista de todos los permisos"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/permisos"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"permisoId\": 1,\n        \"nombre\": \"CREAR_USUARIO\",\n        \"descripcion\": \"Permite crear nuevos usuarios en el sistema\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Obtener Permiso por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/permisos/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "permisos", "1"]
+						},
+						"description": "Obtiene un permiso específico por su ID"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/permisos/1"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"permisoId\": 1,\n    \"nombre\": \"CREAR_USUARIO\",\n    \"descripcion\": \"Permite crear nuevos usuarios en el sistema\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Crear Permiso",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"CREAR_USUARIO\",\n    \"descripcion\": \"Permite crear nuevos usuarios en el sistema\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/permisos",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "permisos"]
+						},
+						"description": "Crea un nuevo permiso"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"nombre\": \"CREAR_USUARIO\",\n    \"descripcion\": \"Permite crear nuevos usuarios en el sistema\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/permisos"
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"permisoId\": 1,\n    \"nombre\": \"CREAR_USUARIO\",\n    \"descripcion\": \"Permite crear nuevos usuarios en el sistema\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Actualizar Permiso",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"CREAR_USUARIO_ACTUALIZADO\",\n    \"descripcion\": \"Descripción actualizada del permiso\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/permisos/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "permisos", "1"]
+						},
+						"description": "Actualiza un permiso existente"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"nombre\": \"CREAR_USUARIO_ACTUALIZADO\",\n    \"descripcion\": \"Descripción actualizada del permiso\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/permisos/1"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"permisoId\": 1,\n    \"nombre\": \"CREAR_USUARIO_ACTUALIZADO\",\n    \"descripcion\": \"Descripción actualizada del permiso\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Eliminar Permiso",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/permisos/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "permisos", "1"]
+						},
+						"description": "Elimina un permiso existente"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/permisos/1"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			]
 		}
 	],
 	"event": [

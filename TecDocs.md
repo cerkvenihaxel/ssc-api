@@ -1,134 +1,178 @@
 # Documentación Técnica - SSC API
 
-## Autenticación con Magic Links
+## Descripción General
+API REST para el Sistema de Servicios de Salud (SSC) implementada con NestJS y PostgreSQL. La API utiliza una arquitectura limpia (Clean Architecture) y sigue los principios SOLID.
 
-El sistema implementa un mecanismo de autenticación sin contraseñas utilizando magic links. Este método es seguro y proporciona una experiencia de usuario fluida.
+## Arquitectura
 
-### Endpoints de Autenticación
+### Capas
+1. **API (Presentación)**
+   - Controllers
+   - DTOs
+   - Guards
+   - Decorators
 
-Base URL: `/api/v1/auth`
+2. **Aplicación**
+   - Servicios
+   - Casos de uso
 
-#### 1. Solicitar Magic Link
+3. **Dominio**
+   - Modelos
+   - Interfaces de repositorios
+   - Reglas de negocio
 
-```http
-POST /login
-Content-Type: application/json
+4. **Infraestructura**
+   - Implementaciones de repositorios
+   - Configuraciones
+   - Adaptadores externos
 
-{
-  "email": "usuario@ejemplo.com"
-}
+## Autenticación
+El sistema utiliza un mecanismo de autenticación basado en Magic Links y JWT:
+
+1. **Magic Link**
+   - El usuario solicita acceso con su email
+   - Se genera un token único y temporal
+   - Se envía un enlace por correo
+   - El enlace contiene el token para verificación
+
+2. **JWT**
+   - Al verificar el Magic Link, se genera un JWT
+   - El token JWT se utiliza para autenticar las solicitudes subsiguientes
+   - Duración del token: 24 horas
+
+## Endpoints
+
+### Autenticación
+```
+POST /api/v1/auth/login
+GET  /api/v1/auth/verify
+POST /api/v1/auth/logout
 ```
 
-**Respuesta exitosa (200)**
-```json
-{
-  "message": "Se ha enviado un enlace de acceso a tu correo electrónico"
-}
+### Permisos
+```
+GET    /api/v1/permisos     - Listar todos los permisos
+GET    /api/v1/permisos/:id - Obtener un permiso por ID
+POST   /api/v1/permisos     - Crear un nuevo permiso
+PUT    /api/v1/permisos/:id - Actualizar un permiso
+DELETE /api/v1/permisos/:id - Eliminar un permiso
 ```
 
-**Respuesta de error (404)**
-```json
-{
-  "message": "Usuario no encontrado",
-  "statusCode": 404
-}
+## Modelos de Base de Datos
+
+### Permisos
+```sql
+CREATE TABLE permisos (
+    permiso_id  serial PRIMARY KEY,
+    nombre      varchar(50) NOT NULL UNIQUE,
+    descripcion text
+);
 ```
 
-#### 2. Verificar Magic Link
-
-```http
-GET /verify?token=abc123...
-```
-
-**Respuesta exitosa (200)**
-```json
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-**Respuesta de error (401)**
-```json
-{
-  "message": "Link inválido o expirado",
-  "statusCode": 401
-}
-```
-
-#### 3. Cerrar Sesión
-
-```http
-POST /logout
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Respuesta exitosa (200)**
-```json
-{
-  "message": "Sesión cerrada exitosamente"
-}
-```
-
-**Respuesta de error (401)**
-```json
-{
-  "message": "No hay token de acceso",
-  "statusCode": 401
-}
-```
-
-### Flujo de Autenticación
-
-1. El usuario solicita acceso proporcionando su correo electrónico
-2. El sistema:
-   - Verifica que el usuario existe
-   - Invalida cualquier magic link activo anterior
-   - Genera un nuevo magic link
-   - Envía el correo con el enlace
-3. El usuario hace clic en el enlace o usa el token
-4. El sistema:
-   - Verifica que el token sea válido y no haya expirado
-   - Marca el magic link como usado
-   - Genera y devuelve un JWT
-5. El usuario utiliza el JWT para las siguientes peticiones
-
-### Seguridad
-
-- Los magic links expiran después de 15 minutos
-- Cada magic link solo puede usarse una vez
-- Se registra la IP y User Agent tanto en la solicitud como en el uso
-- Los JWT expiran después de 24 horas
-- Se implementa rate limiting para prevenir abusos
-
-### Documentación Swagger
-
-La documentación completa de la API está disponible en formato Swagger/OpenAPI:
-
-```
-http://localhost:3000/api/docs
-```
-
-### Variables de Entorno Requeridas
-
+## Variables de Entorno
 ```env
-# Configuración de la aplicación
+# Aplicación
 PORT=3000
 APP_URL=http://localhost:3000
 
-# Base de datos
+# JWT
+JWT_SECRET=your_super_secret_key_here
+
+# Base de Datos
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=ssc_db
 DB_USER=postgres
-DB_PASSWORD=your_password
+DB_PASSWORD=postgres
 
-# JWT
-JWT_SECRET=your_jwt_secret_key
+# Email
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_specific_password
+MAIL_FROM_NAME=SSC Sistema
+MAIL_FROM_ADDRESS=your_email@gmail.com
+```
 
-# SMTP
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=your_smtp_user
-SMTP_PASS=your_smtp_password
-SMTP_FROM=no-reply@example.com
-``` 
+## Seguridad
+- Todos los endpoints (excepto auth/login) requieren autenticación JWT
+- Los tokens Magic Link son de un solo uso y expiran en 15 minutos
+- Los tokens JWT expiran en 24 horas
+- Se registra la IP y User-Agent en cada solicitud de acceso
+- Validación de datos con class-validator
+- Sanitización de entradas
+- Manejo de errores centralizado
+
+## Documentación API
+- Swagger UI disponible en `/api/docs`
+- Colección de Postman actualizada con todos los endpoints
+- Ejemplos de requests y responses incluidos
+
+## Dependencias Principales
+```json
+{
+  "@nestjs/common": "latest",
+  "@nestjs/core": "latest",
+  "@nestjs/swagger": "latest",
+  "@nestjs/jwt": "latest",
+  "@nestjs/passport": "latest",
+  "@nestjs-modules/mailer": "latest",
+  "pg": "latest",
+  "class-validator": "latest",
+  "class-transformer": "latest"
+}
+```
+
+## Flujo de Autenticación
+
+1. **Solicitud de Magic Link**
+   ```mermaid
+   sequenceDiagram
+   participant U as Usuario
+   participant A as API
+   participant DB as Base de Datos
+   participant E as Email
+
+   U->>A: POST /auth/login (email)
+   A->>DB: Verificar usuario
+   A->>DB: Crear magic link
+   A->>E: Enviar email
+   A->>U: 200 OK
+   ```
+
+2. **Verificación y Obtención de JWT**
+   ```mermaid
+   sequenceDiagram
+   participant U as Usuario
+   participant A as API
+   participant DB as Base de Datos
+
+   U->>A: GET /auth/verify (token)
+   A->>DB: Verificar token
+   A->>DB: Marcar token como usado
+   A->>U: JWT Token
+   ```
+
+## Manejo de Errores
+- 400 Bad Request: Errores de validación
+- 401 Unauthorized: Token inválido o expirado
+- 404 Not Found: Recurso no encontrado
+- 409 Conflict: Conflicto de recursos (ej: nombre duplicado)
+- 500 Internal Server Error: Errores del servidor
+
+## Pruebas
+- Unit tests con Jest
+- E2E tests con Supertest
+- Tests de integración para la base de datos
+
+## Monitoreo y Logs
+- Health check endpoint: `/api/health`
+- Logging de errores y accesos
+- Tracking de intentos de acceso fallidos
+
+## Consideraciones de Despliegue
+1. Configurar variables de entorno
+2. Ejecutar migraciones de base de datos
+3. Configurar CORS según necesidad
+4. Configurar rate limiting
+5. Configurar SSL/TLS 
