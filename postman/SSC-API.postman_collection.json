@@ -499,6 +499,689 @@
 					]
 				}
 			]
+		},
+		{
+			"name": "Afiliados",
+			"description": "Endpoints relacionados con la gestión de afiliados",
+			"item": [
+				{
+					"name": "Listar Afiliados",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/afiliados",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "afiliados"]
+						},
+						"description": "Obtiene la lista de todos los afiliados"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": \"1\",\n        \"affiliateNumber\": \"AF001\",\n        \"affiliateStatus\": \"ACTIVE\",\n        \"creationDate\": \"2024-03-20T10:00:00Z\",\n        \"lastUpdateDate\": \"2024-03-20T10:00:00Z\",\n        \"cuil\": \"20123456789\",\n        \"cvu\": \"0000000000000000000000\",\n        \"documentType\": \"DNI\",\n        \"documentNumber\": \"12345678\",\n        \"documentCountry\": \"AR\",\n        \"gender\": \"M\",\n        \"firstName\": \"Juan\",\n        \"lastName\": \"Pérez\",\n        \"birthDate\": \"1990-01-01\",\n        \"nationality\": \"AR\",\n        \"email\": \"juan.perez@ejemplo.com\",\n        \"occupation\": \"Empleado\",\n        \"phone\": \"1234567890\",\n        \"picture\": \"https://example.com/picture.jpg\",\n        \"signedTycVersion\": null,\n        \"signedTycDate\": null,\n        \"primaryAddressId\": \"addr_123\",\n        \"createdBy\": \"system\",\n        \"userId\": \"user_123\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Obtener Afiliado por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/afiliados/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "afiliados", "1"]
+						},
+						"description": "Obtiene un afiliado específico por su ID"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados/1"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\"id\": \"1\",\"affiliateNumber\": \"AF001\",\"affiliateStatus\": \"ACTIVE\",\"creationDate\": \"2024-03-20T10:00:00Z\",\"lastUpdateDate\": \"2024-03-20T10:00:00Z\",\"cuil\": \"20123456789\",\"cvu\": \"0000000000000000000000\",\"documentType\": \"DNI\",\"documentNumber\": \"12345678\",\"documentCountry\": \"AR\",\"gender\": \"M\",\"firstName\": \"Juan\",\"lastName\": \"Pérez\",\"birthDate\": \"1990-01-01\",\"nationality\": \"AR\",\"email\": \"juan.perez@ejemplo.com\",\"occupation\": \"Empleado\",\"phone\": \"1234567890\",\"picture\": \"https://example.com/picture.jpg\",\"signedTycVersion\": null,\"signedTycDate\": null,\"primaryAddressId\": \"addr_123\",\"createdBy\": \"system\",\"userId\": \"user_123\"}"
+						},
+						{
+							"name": "No encontrado",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados/999"
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Afiliado con ID 999 no encontrado\",\n    \"statusCode\": 404\n}"
+						}
+					]
+				},
+				{
+					"name": "Crear Afiliado",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"affiliateNumber\": \"AF001\",\n    \"affiliateStatus\": \"ACTIVE\",\n    \"cuil\": \"20123456789\",\n    \"documentNumber\": \"12345678\",\n    \"firstName\": \"Juan\",\n    \"lastName\": \"Pérez\",\n    \"email\": \"juan.perez@ejemplo.com\",\n    \"password\": \"secreto123\",\n    \"cvu\": \"0000000000000000000000\",\n    \"documentType\": \"DNI\",\n    \"documentCountry\": \"AR\",\n    \"gender\": \"M\",\n    \"birthDate\": \"1990-01-01\",\n    \"nationality\": \"AR\",\n    \"occupation\": \"Empleado\",\n    \"phone\": \"1234567890\",\n    \"picture\": \"https://example.com/picture.jpg\",\n    \"primaryAddressId\": \"addr_123\",\n    \"userId\": \"user_123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/afiliados",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "afiliados"]
+						},
+						"description": "Crea un nuevo afiliado"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"affiliateNumber\": \"AF001\",\n    \"affiliateStatus\": \"ACTIVE\",\n    \"cuil\": \"20123456789\",\n    \"documentNumber\": \"12345678\",\n    \"firstName\": \"Juan\",\n    \"lastName\": \"Pérez\",\n    \"email\": \"juan.perez@ejemplo.com\",\n    \"password\": \"secreto123\",\n    \"cvu\": \"0000000000000000000000\",\n    \"documentType\": \"DNI\",\n    \"documentCountry\": \"AR\",\n    \"gender\": \"M\",\n    \"birthDate\": \"1990-01-01\",\n    \"nationality\": \"AR\",\n    \"occupation\": \"Empleado\",\n    \"phone\": \"1234567890\",\n    \"picture\": \"https://example.com/picture.jpg\",\n    \"primaryAddressId\": \"addr_123\",\n    \"userId\": \"user_123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados"
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\"id\": \"1\",\"affiliateNumber\": \"AF001\",\"affiliateStatus\": \"ACTIVE\",\"creationDate\": \"2024-03-20T10:00:00Z\",\"lastUpdateDate\": \"2024-03-20T10:00:00Z\",\"cuil\": \"20123456789\",\"cvu\": \"0000000000000000000000\",\"documentType\": \"DNI\",\"documentNumber\": \"12345678\",\"documentCountry\": \"AR\",\"gender\": \"M\",\"firstName\": \"Juan\",\"lastName\": \"Pérez\",\"birthDate\": \"1990-01-01\",\"nationality\": \"AR\",\"email\": \"juan.perez@ejemplo.com\",\"occupation\": \"Empleado\",\"phone\": \"1234567890\",\"picture\": \"https://example.com/picture.jpg\",\"signedTycVersion\": null,\"signedTycDate\": null,\"primaryAddressId\": \"addr_123\",\"createdBy\": \"system\",\"userId\": \"user_123\"}"
+						},
+						{
+							"name": "Email duplicado",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"affiliateNumber\": \"AF002\",\n    \"affiliateStatus\": \"ACTIVE\",\n    \"cuil\": \"20987654321\",\n    \"documentNumber\": \"87654321\",\n    \"firstName\": \"Pedro\",\n    \"lastName\": \"Gómez\",\n    \"email\": \"juan.perez@ejemplo.com\",\n    \"password\": \"secreto123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados"
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Ya existe un afiliado con el email juan.perez@ejemplo.com\",\n    \"statusCode\": 409\n}"
+						}
+					]
+				},
+				{
+					"name": "Actualizar Afiliado",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"affiliateNumber\": \"AF001\",\n    \"affiliateStatus\": \"ACTIVE\",\n    \"cuil\": \"20123456789\",\n    \"documentNumber\": \"12345678\",\n    \"firstName\": \"Juan Carlos\",\n    \"lastName\": \"Pérez\",\n    \"email\": \"juancarlos.perez@ejemplo.com\",\n    \"password\": \"nuevosecreto123\",\n    \"cvu\": \"1111111111111111111111\",\n    \"documentType\": \"DNI\",\n    \"documentCountry\": \"AR\",\n    \"gender\": \"M\",\n    \"birthDate\": \"1990-01-01\",\n    \"nationality\": \"AR\",\n    \"occupation\": \"Gerente\",\n    \"phone\": \"0987654321\",\n    \"picture\": \"https://example.com/new-picture.jpg\",\n    \"primaryAddressId\": \"addr_456\",\n    \"userId\": \"user_123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/afiliados/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "afiliados", "1"]
+						},
+						"description": "Actualiza un afiliado existente"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"affiliateNumber\": \"AF001\",\n    \"affiliateStatus\": \"ACTIVE\",\n    \"cuil\": \"20123456789\",\n    \"documentNumber\": \"12345678\",\n    \"firstName\": \"Juan Carlos\",\n    \"lastName\": \"Pérez\",\n    \"email\": \"juancarlos.perez@ejemplo.com\",\n    \"password\": \"nuevosecreto123\",\n    \"cvu\": \"1111111111111111111111\",\n    \"documentType\": \"DNI\",\n    \"documentCountry\": \"AR\",\n    \"gender\": \"M\",\n    \"birthDate\": \"1990-01-01\",\n    \"nationality\": \"AR\",\n    \"occupation\": \"Gerente\",\n    \"phone\": \"0987654321\",\n    \"picture\": \"https://example.com/new-picture.jpg\",\n    \"primaryAddressId\": \"addr_456\",\n    \"userId\": \"user_123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados/1"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\"id\": \"1\",\"affiliateNumber\": \"AF001\",\"affiliateStatus\": \"ACTIVE\",\"creationDate\": \"2024-03-20T10:00:00Z\",\"lastUpdateDate\": \"2024-03-20T11:00:00Z\",\"cuil\": \"20123456789\",\"cvu\": \"1111111111111111111111\",\"documentType\": \"DNI\",\"documentNumber\": \"12345678\",\"documentCountry\": \"AR\",\"gender\": \"M\",\"firstName\": \"Juan Carlos\",\"lastName\": \"Pérez\",\"birthDate\": \"1990-01-01\",\"nationality\": \"AR\",\"email\": \"juancarlos.perez@ejemplo.com\",\"occupation\": \"Gerente\",\"phone\": \"0987654321\",\"picture\": \"https://example.com/new-picture.jpg\",\"signedTycVersion\": \"1.0\",\"signedTycDate\": \"2024-03-20T10:00:00Z\",\"primaryAddressId\": \"addr_456\",\"createdBy\": \"system\",\"userId\": \"user_123\"}"
+						},
+						{
+							"name": "No encontrado",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"firstName\": \"Juan Carlos\",\n    \"lastName\": \"Pérez\",\n    \"email\": \"juancarlos.perez@ejemplo.com\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados/999"
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Afiliado con ID 999 no encontrado\",\n    \"statusCode\": 404\n}"
+						}
+					]
+				},
+				{
+					"name": "Eliminar Afiliado",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/afiliados/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "afiliados", "1"]
+						},
+						"description": "Elimina un afiliado existente"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados/1"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						},
+						{
+							"name": "No encontrado",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/afiliados/999"
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Afiliado con ID 999 no encontrado\",\n    \"statusCode\": 404\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Direcciones",
+			"description": "Endpoints relacionados con la gestión de direcciones de afiliados",
+			"item": [
+				{
+					"name": "Listar Direcciones",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/address",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "address"]
+						},
+						"description": "Obtiene la lista de todas las direcciones"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/address"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": \"123e4567-e89b-12d3-a456-426614174000\",\n        \"affiliateId\": \"123e4567-e89b-12d3-a456-426614174001\",\n        \"street\": \"Av. Corrientes\",\n        \"number\": \"1234\",\n        \"city\": \"Buenos Aires\",\n        \"state\": \"CABA\",\n        \"postalCode\": \"1043\",\n        \"country\": \"Argentina\",\n        \"createdAt\": \"2024-03-20T10:00:00Z\",\n        \"updatedAt\": \"2024-03-20T10:00:00Z\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Obtener Dirección por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/address/123e4567-e89b-12d3-a456-426614174000",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "address", "123e4567-e89b-12d3-a456-426614174000"]
+						},
+						"description": "Obtiene una dirección específica por su ID"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/address/123e4567-e89b-12d3-a456-426614174000"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": \"123e4567-e89b-12d3-a456-426614174000\",\n    \"affiliateId\": \"123e4567-e89b-12d3-a456-426614174001\",\n    \"street\": \"Av. Corrientes\",\n    \"number\": \"1234\",\n    \"city\": \"Buenos Aires\",\n    \"state\": \"CABA\",\n    \"postalCode\": \"1043\",\n    \"country\": \"Argentina\",\n    \"createdAt\": \"2024-03-20T10:00:00Z\",\n    \"updatedAt\": \"2024-03-20T10:00:00Z\"\n}"
+						},
+						{
+							"name": "No encontrado",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/address/999"
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Dirección con ID 999 no encontrada\",\n    \"statusCode\": 404\n}"
+						}
+					]
+				},
+				{
+					"name": "Crear Dirección",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"affiliateId\": \"123e4567-e89b-12d3-a456-426614174001\",\n    \"street\": \"Av. Corrientes\",\n    \"number\": \"1234\",\n    \"city\": \"Buenos Aires\",\n    \"state\": \"CABA\",\n    \"postalCode\": \"1043\",\n    \"country\": \"Argentina\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/address",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "address"]
+						},
+						"description": "Crea una nueva dirección"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"affiliateId\": \"123e4567-e89b-12d3-a456-426614174001\",\n    \"street\": \"Av. Corrientes\",\n    \"number\": \"1234\",\n    \"city\": \"Buenos Aires\",\n    \"state\": \"CABA\",\n    \"postalCode\": \"1043\",\n    \"country\": \"Argentina\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/address"
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": \"123e4567-e89b-12d3-a456-426614174000\",\n    \"affiliateId\": \"123e4567-e89b-12d3-a456-426614174001\",\n    \"street\": \"Av. Corrientes\",\n    \"number\": \"1234\",\n    \"city\": \"Buenos Aires\",\n    \"state\": \"CABA\",\n    \"postalCode\": \"1043\",\n    \"country\": \"Argentina\",\n    \"createdAt\": \"2024-03-20T10:00:00Z\",\n    \"updatedAt\": \"2024-03-20T10:00:00Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Actualizar Dirección",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"street\": \"Av. Corrientes\",\n    \"number\": \"1234\",\n    \"city\": \"Buenos Aires\",\n    \"state\": \"CABA\",\n    \"postalCode\": \"1043\",\n    \"country\": \"Argentina\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/address/123e4567-e89b-12d3-a456-426614174000",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "address", "123e4567-e89b-12d3-a456-426614174000"]
+						},
+						"description": "Actualiza una dirección existente"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"street\": \"Av. Corrientes\",\n    \"number\": \"1234\",\n    \"city\": \"Buenos Aires\",\n    \"state\": \"CABA\",\n    \"postalCode\": \"1043\",\n    \"country\": \"Argentina\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/address/123e4567-e89b-12d3-a456-426614174000"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": \"123e4567-e89b-12d3-a456-426614174000\",\n    \"affiliateId\": \"123e4567-e89b-12d3-a456-426614174001\",\n    \"street\": \"Av. Corrientes\",\n    \"number\": \"1234\",\n    \"city\": \"Buenos Aires\",\n    \"state\": \"CABA\",\n    \"postalCode\": \"1043\",\n    \"country\": \"Argentina\",\n    \"createdAt\": \"2024-03-20T10:00:00Z\",\n    \"updatedAt\": \"2024-03-20T11:00:00Z\"\n}"
+						},
+						{
+							"name": "No encontrado",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"street\": \"Av. Corrientes\",\n    \"number\": \"1234\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/address/999"
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Dirección con ID 999 no encontrada\",\n    \"statusCode\": 404\n}"
+						}
+					]
+				},
+				{
+					"name": "Eliminar Dirección",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/address/123e4567-e89b-12d3-a456-426614174000",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "address", "123e4567-e89b-12d3-a456-426614174000"]
+						},
+						"description": "Elimina una dirección existente"
+					},
+					"response": [
+						{
+							"name": "Éxito",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/address/123e4567-e89b-12d3-a456-426614174000"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						},
+						{
+							"name": "No encontrado",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/address/999"
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Dirección con ID 999 no encontrada\",\n    \"statusCode\": 404\n}"
+						}
+					]
+				}
+			]
 		}
 	],
 	"event": [
