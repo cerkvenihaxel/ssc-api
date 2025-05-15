@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagg
 import { JwtAuthGuard } from '@/api/guards/jwt-auth.guard';
 import { CreateAddressDto } from './dtos/create-address.dto';
 import { UpdateAddressDto } from './dtos/update-address.dto';
-import { AddressService } from '@/application/services/address.service';
+import { AddressService } from '@/application/services/address/address.service';
 
 @ApiTags('Direcciones')
 @Controller('v1/address')
