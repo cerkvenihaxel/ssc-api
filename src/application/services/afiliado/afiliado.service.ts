@@ -61,14 +61,14 @@ export class AfiliadoService {
       afiliado.lastUpdate,
       dto.cuil,
       dto.cvu || null,
-      dto.documentType,
+      dto.documentType || 'DNI',
       dto.documentNumber,
-      dto.documentCountry,
-      dto.gender,
+      dto.documentCountry || 'Argentina',
+      dto.gender || '',
       dto.firstName,
       dto.lastName,
-      dto.birthDate,
-      dto.nationality,
+      dto.birthDate || new Date(),
+      dto.nationality || 'Argentina',
       dto.email,
       passwordHash,
       dto.occupation || null,
@@ -77,12 +77,20 @@ export class AfiliadoService {
       null,  // signedTycVersion
       null,  // signedTycDate
       dto.primaryAddressId || null,
-      'SYSTEM',  // createdBy
-      null,  // updatedBy
-      dto.userId
+      null,  // createdBy - usar null en lugar de 'SYSTEM'
+      null  // updatedBy
     );
 
-    return this.afiliadoRepository.save(updatedAfiliado);
+    const savedAfiliado = await this.afiliadoRepository.save(updatedAfiliado);
+
+    // Asociar con obras sociales si se proporcionaron
+    if (dto.healthcareProviderIds && dto.healthcareProviderIds.length > 0) {
+      for (const healthcareProviderId of dto.healthcareProviderIds) {
+        await this.afiliadoRepository.associateWithHealthcareProvider(savedAfiliado.id, healthcareProviderId);
+      }
+    }
+
+    return savedAfiliado;
   }
 
   async update(affiliateId: string, dto: UpdateAfiliadoDto): Promise<Afiliado> {
@@ -143,11 +151,32 @@ export class AfiliadoService {
       existingAfiliado.signedTycDate,
       dto.primaryAddressId !== undefined ? dto.primaryAddressId : existingAfiliado.primaryAddressId,
       existingAfiliado.createdBy,
-      dto.userId || existingAfiliado.userId,
-      dto.userId !== undefined ? dto.userId : existingAfiliado.userId
+      null  // updatedBy
     );
 
-    return this.afiliadoRepository.update(updatedAfiliado);
+    const savedAfiliado = await this.afiliadoRepository.update(updatedAfiliado);
+
+    // Actualizar asociaciones con obras sociales si se proporcionaron
+    if (dto.healthcareProviderIds !== undefined) {
+      // Obtener las obras sociales actualmente asociadas
+      const currentHealthcareProviderIds = await this.afiliadoRepository.getHealthcareProvidersAssociated(affiliateId);
+
+      // Desasociar obras sociales que ya no están seleccionadas
+      for (const currentId of currentHealthcareProviderIds) {
+        if (!dto.healthcareProviderIds.includes(currentId)) {
+          await this.afiliadoRepository.dissociateFromHealthcareProvider(affiliateId, currentId);
+        }
+      }
+
+      // Asociar nuevas obras sociales
+      for (const healthcareProviderId of dto.healthcareProviderIds) {
+        if (!currentHealthcareProviderIds.includes(healthcareProviderId)) {
+          await this.afiliadoRepository.associateWithHealthcareProvider(affiliateId, healthcareProviderId);
+        }
+      }
+    }
+
+    return savedAfiliado;
   }
 
   async delete(affiliateId: string): Promise<void> {

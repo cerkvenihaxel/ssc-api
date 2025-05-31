@@ -28,7 +28,6 @@ export class Afiliado {
     public readonly primaryAddressId: string | null,
     public readonly createdBy: string,
     public readonly updatedBy: string | null,
-    public readonly userId: string,
     public readonly addresses?: Address[]
   ) {}
 
@@ -69,7 +68,6 @@ export class Afiliado {
       null,  // primaryAddressId
       'SYSTEM',  // createdBy
       null,  // updatedBy
-      '',  // userId
       params.addresses
     );
   }

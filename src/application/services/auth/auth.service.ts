@@ -9,6 +9,8 @@ import { UserSession } from '../../../domain/models/session/user-session.model';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import { v4 as uuidv4 } from 'uuid';
+import { RouteService } from './route.service';
+import { LoginSuccessDto, UserInfoDto } from '../../../api/v1/auth/dtos/user-info.dto';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +23,8 @@ export class AuthService {
     private readonly sessionRepository: IUserSessionRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly mailerService: MailerService
+    private readonly mailerService: MailerService,
+    private readonly routeService: RouteService
   ) {}
 
   async requestMagicLink(email: string, requestIp: string, userAgent: string): Promise<void> {
@@ -59,8 +62,9 @@ export class AuthService {
     await this.magicLinkRepository.save(magicLink);
 
     // Enviar email con el magic link
-    const baseUrl = this.configService.get<string>('APP_URL');
-    const loginUrl = `${baseUrl}/auth/verify?token=${magicLink.token}`;
+    const baseUrl = this.configService.get<string>('APP_URL') || 'http://localhost:3000';
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+    const loginUrl = `${frontendUrl}/auth/verify?token=${magicLink.token}`;
 
     await this.mailerService.sendMail({
       to: user.email,
@@ -75,7 +79,7 @@ export class AuthService {
     });
   }
 
-  async verifyMagicLink(token: string, requestIp: string, userAgent: string): Promise<{ accessToken: string, sessionId: string }> {
+  async verifyMagicLink(token: string, requestIp: string, userAgent: string): Promise<LoginSuccessDto> {
     const magicLink = await this.magicLinkRepository.findByToken(token);
     if (!magicLink) {
       throw new UnauthorizedException('Link inválido');
@@ -95,8 +99,11 @@ export class AuthService {
       magicLink.markAsUsed(requestIp, userAgent)
     );
 
+    // Actualizar último login
+    await this.userRepository.updateLastLogin(user.userId);
+
     // Crear sesión de usuario
-    const deviceId = uuidv4(); // Generar un ID único para el dispositivo
+    const deviceId = uuidv4();
     const session = UserSession.create(
       user.userId,
       deviceId,
@@ -105,27 +112,88 @@ export class AuthService {
     );
     await this.sessionRepository.save(session);
 
+    // Obtener permisos del usuario
+    const permissions = await this.userRepository.getUserPermissions(user.userId);
+    
+    // Obtener información del rol
+    const roleInfo = await this.userRepository.getUserRole(user.userId);
+    
+    // Obtener rutas disponibles
+    const { defaultRoute, routes } = this.routeService.getRoutesByRole(roleInfo.name);
+
+    // Preparar información del usuario
+    const userInfo: UserInfoDto = {
+      userId: user.userId,
+      email: user.email,
+      nombre: user.nombre,
+      role: {
+        id: roleInfo.id,
+        name: roleInfo.name,
+        description: roleInfo.description || ''
+      },
+      status: user.status,
+      permissions: permissions,
+      defaultRoute: defaultRoute,
+      availableRoutes: routes,
+      lastLogin: new Date(),
+      emailVerified: user.emailVerified
+    };
+
     // Generar JWT
     const payload = {
       sub: user.userId,
       email: user.email,
       roleId: user.roleId,
-      sessionId: session.sessionId
+      roleName: roleInfo.name,
+      sessionId: session.sessionId,
+      permissions: permissions
     };
 
+    const accessToken = await this.jwtService.signAsync(payload);
+    const expiresIn = 24 * 60 * 60; // 24 horas en segundos
+
     return {
-      accessToken: await this.jwtService.signAsync(payload),
-      sessionId: session.sessionId
+      accessToken,
+      sessionId: session.sessionId,
+      user: userInfo,
+      message: 'Inicio de sesión exitoso',
+      expiresIn
+    };
+  }
+
+  async getCurrentUser(userId: string): Promise<UserInfoDto> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const permissions = await this.userRepository.getUserPermissions(user.userId);
+    const roleInfo = await this.userRepository.getUserRole(user.userId);
+    const { defaultRoute, routes } = this.routeService.getRoutesByRole(roleInfo.name);
+
+    return {
+      userId: user.userId,
+      email: user.email,
+      nombre: user.nombre,
+      role: {
+        id: roleInfo.id,
+        name: roleInfo.name,
+        description: roleInfo.description || ''
+      },
+      status: user.status,
+      permissions: permissions,
+      defaultRoute: defaultRoute,
+      availableRoutes: routes,
+      lastLogin: user.lastLogin,
+      emailVerified: user.emailVerified
     };
   }
 
   async logout(sessionId: string): Promise<void> {
     const session = await this.sessionRepository.findBySessionId(sessionId);
-    if (!session) {
-      throw new NotFoundException('Sesión no encontrada');
+    if (session) {
+      await this.sessionRepository.update(session.markAsLoggedOut());
     }
-
-    await this.sessionRepository.update(session.markAsLoggedOut());
   }
 
   async validateToken(token: string): Promise<User> {
@@ -146,5 +214,37 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException();
     }
+  }
+
+  async refreshToken(userId: string, sessionId: string): Promise<{ accessToken: string; expiresIn: number }> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    const session = await this.sessionRepository.findBySessionId(sessionId);
+    if (!session || session.logoutAt) {
+      throw new UnauthorizedException('Sesión no válida');
+    }
+
+    const permissions = await this.userRepository.getUserPermissions(user.userId);
+    const roleInfo = await this.userRepository.getUserRole(user.userId);
+
+    const payload = {
+      sub: user.userId,
+      email: user.email,
+      roleId: user.roleId,
+      roleName: roleInfo.name,
+      sessionId: session.sessionId,
+      permissions: permissions
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload);
+    const expiresIn = 24 * 60 * 60; // 24 horas en segundos
+
+    return {
+      accessToken,
+      expiresIn
+    };
   }
 } 

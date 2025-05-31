@@ -9,4 +9,9 @@ export interface IAfiliadoRepository {
   save(afiliado: Afiliado): Promise<Afiliado>;
   update(afiliado: Afiliado): Promise<Afiliado>;
   delete(affiliateId: string): Promise<void>;
+  
+  // Métodos para manejar obras sociales
+  associateWithHealthcareProvider(affiliateId: string, healthcareProviderId: string): Promise<void>;
+  dissociateFromHealthcareProvider(affiliateId: string, healthcareProviderId: string): Promise<void>;
+  getHealthcareProvidersAssociated(affiliateId: string): Promise<string[]>;
 } 

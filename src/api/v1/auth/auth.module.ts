@@ -6,6 +6,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { AuthController } from './auth.controller';
 import { AuthService } from '../../../application/services/auth/auth.service';
+import { RouteService } from '../../../application/services/auth/route.service';
 import { PostgresUserRepository } from '../../../infrastructure/repositories/user/user.repository';
 import { PostgresMagicLinkRepository } from '../../../infrastructure/repositories/magiclink/magic-link.repository';
 import { PostgresUserSessionRepository } from '../../../infrastructure/repositories/session/user-session.repository';
@@ -55,6 +56,7 @@ import { Pool } from 'pg';
   controllers: [AuthController],
   providers: [
     AuthService,
+    RouteService,
     JwtStrategy,
     {
       provide: 'IUserRepository',
@@ -82,6 +84,6 @@ import { Pool } from 'pg';
       inject: [ConfigService],
     },
   ],
-  exports: [AuthService, JwtStrategy, PassportModule, JwtModule],
+  exports: [AuthService, RouteService, JwtStrategy, PassportModule, JwtModule],
 })
 export class AuthModule {} 

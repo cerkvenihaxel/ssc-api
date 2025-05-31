@@ -24,7 +24,32 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
       return null;
     }
 
-    return this.mapToEntity(result.rows[0]);
+    const afiliado = this.mapToEntity(result.rows[0]);
+    
+    // Obtener las obras sociales asociadas
+    const healthcareProvidersResult = await this.pool.query(
+      `SELECT os.healthcare_provider_id, os.name, os.status, os.contact_phone, os.contact_email, os.address
+       FROM obras_sociales os
+       INNER JOIN afiliados_obras_sociales aos ON os.healthcare_provider_id = aos.healthcare_provider_id
+       WHERE aos.affiliate_id = $1 AND aos.association_status = 'ACTIVE'`,
+      [affiliateId]
+    );
+
+    // Agregar las obras sociales al afiliado
+    if (healthcareProvidersResult.rows.length > 0) {
+      (afiliado as any).healthcareProviders = healthcareProvidersResult.rows.map(row => ({
+        healthcareProviderId: row.healthcare_provider_id,
+        name: row.name,
+        status: row.status,
+        contactPhone: row.contact_phone,
+        contactEmail: row.contact_email,
+        address: row.address
+      }));
+    } else {
+      (afiliado as any).healthcareProviders = [];
+    }
+
+    return afiliado;
   }
 
   async findByEmail(email: string): Promise<Afiliado | null> {
@@ -93,9 +118,8 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
         signed_tyc_date,
         primary_address_id,
         created_by,
-        updated_by,
-        user_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+        updated_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
       RETURNING *`,
       [
         afiliado.id,
@@ -122,8 +146,7 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
         afiliado.signedTycDate,
         afiliado.primaryAddressId,
         afiliado.createdBy,
-        afiliado.updatedBy,
-        afiliado.userId
+        afiliado.updatedBy
       ]
     );
 
@@ -152,9 +175,8 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
         phone = $17,
         picture = $18,
         primary_address_id = $19,
-        updated_by = $20,
-        user_id = $21
-      WHERE affiliate_id = $22
+        updated_by = $20
+      WHERE affiliate_id = $21
       RETURNING *`,
       [
         afiliado.affiliateNumber,
@@ -177,7 +199,6 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
         afiliado.picture,
         afiliado.primaryAddressId,
         afiliado.updatedBy,
-        afiliado.userId,
         afiliado.id
       ]
     );
@@ -198,6 +219,47 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
     if (result.rowCount === 0) {
       throw new Error('Afiliado no encontrado');
     }
+  }
+
+  // Métodos para manejar obras sociales
+  async associateWithHealthcareProvider(affiliateId: string, healthcareProviderId: string): Promise<void> {
+    // Verificar si ya existe una asociación activa para esta combinación específica
+    const existingActive = await this.pool.query(
+      `SELECT id FROM afiliados_obras_sociales 
+       WHERE affiliate_id = $1 AND healthcare_provider_id = $2 AND association_status = 'ACTIVE'`,
+      [affiliateId, healthcareProviderId]
+    );
+
+    if (existingActive.rows.length > 0) {
+      // Ya existe una asociación activa para esta obra social específica, no hacer nada
+      return;
+    }
+
+    // Crear nueva asociación activa (el afiliado puede tener múltiples obras sociales)
+    await this.pool.query(
+      `INSERT INTO afiliados_obras_sociales (id, affiliate_id, healthcare_provider_id, association_status, association_date)
+       VALUES (gen_random_uuid(), $1, $2, 'ACTIVE', NOW())`,
+      [affiliateId, healthcareProviderId]
+    );
+  }
+
+  async dissociateFromHealthcareProvider(affiliateId: string, healthcareProviderId: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE afiliados_obras_sociales 
+       SET association_status = 'INACTIVE', end_date = NOW(), updated_at = NOW()
+       WHERE affiliate_id = $1 AND healthcare_provider_id = $2 AND association_status = 'ACTIVE'`,
+      [affiliateId, healthcareProviderId]
+    );
+  }
+
+  async getHealthcareProvidersAssociated(affiliateId: string): Promise<string[]> {
+    const result = await this.pool.query(
+      `SELECT healthcare_provider_id FROM afiliados_obras_sociales 
+       WHERE affiliate_id = $1 AND association_status = 'ACTIVE'`,
+      [affiliateId]
+    );
+
+    return result.rows.map(row => row.healthcare_provider_id);
   }
 
   private mapToEntity(row: any): Afiliado {
@@ -226,8 +288,7 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
       row.signed_tyc_date,
       row.primary_address_id,
       row.created_by,
-      row.updated_by,
-      row.user_id
+      row.updated_by
     );
   }
 } 

@@ -7,11 +7,33 @@ import { Afiliado } from '../../../domain/models/afiliado/afiliado.model';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
 @ApiTags('Afiliados')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('v1/afiliados')
 export class AfiliadosController {
   constructor(private readonly afiliadoService: AfiliadoService) {}
+
+  @ApiOperation({ summary: 'Obtener todos los afiliados (endpoint temporal sin autenticación)' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Lista de afiliados',
+    type: Afiliado,
+    isArray: true
+  })
+  @Get('test')
+  async findAllTest(): Promise<Afiliado[]> {
+    return this.afiliadoService.findAll();
+  }
+
+  @ApiOperation({ summary: 'Obtener un afiliado por ID (endpoint temporal sin autenticación)' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Afiliado encontrado',
+    type: Afiliado
+  })
+  @ApiResponse({ status: 404, description: 'Afiliado no encontrado' })
+  @Get('test/:id')
+  async findByIdTest(@Param('id') id: string): Promise<Afiliado> {
+    return this.afiliadoService.findById(id);
+  }
 
   @ApiOperation({ summary: 'Obtener todos los afiliados' })
   @ApiResponse({ 
@@ -21,6 +43,8 @@ export class AfiliadosController {
     isArray: true
   })
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(): Promise<Afiliado[]> {
     return this.afiliadoService.findAll();
@@ -34,6 +58,8 @@ export class AfiliadosController {
   })
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
   @ApiResponse({ status: 404, description: 'Afiliado no encontrado' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findById(@Param('id') id: string): Promise<Afiliado> {
     return this.afiliadoService.findById(id);
@@ -47,6 +73,8 @@ export class AfiliadosController {
   })
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
   @ApiResponse({ status: 409, description: 'Conflicto - Email, CUIL o número de afiliado ya existe' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() dto: CreateAfiliadoDto): Promise<Afiliado> {
     return this.afiliadoService.create(dto);
@@ -61,6 +89,8 @@ export class AfiliadosController {
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
   @ApiResponse({ status: 404, description: 'Afiliado no encontrado' })
   @ApiResponse({ status: 409, description: 'Conflicto - Email, CUIL o número de afiliado ya existe' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -73,6 +103,8 @@ export class AfiliadosController {
   @ApiResponse({ status: 200, description: 'Afiliado eliminado exitosamente' })
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
   @ApiResponse({ status: 404, description: 'Afiliado no encontrado' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<void> {
     await this.afiliadoService.delete(id);

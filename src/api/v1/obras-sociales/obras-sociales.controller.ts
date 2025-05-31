@@ -7,11 +7,21 @@ import { ObraSocial } from '../../../domain/models/obra-social/obra-social.model
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
 @ApiTags('Obras Sociales')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('v1/obras-sociales')
 export class ObrasSocialesController {
   constructor(private readonly obraSocialService: ObraSocialService) {}
+
+  @ApiOperation({ summary: 'Obtener todas las obras sociales (endpoint temporal sin autenticación)' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Lista de obras sociales',
+    type: ObraSocial,
+    isArray: true
+  })
+  @Get('test')
+  async findAllTest(): Promise<ObraSocial[]> {
+    return this.obraSocialService.findAll();
+  }
 
   @ApiOperation({ summary: 'Obtener todas las obras sociales' })
   @ApiResponse({ 
@@ -21,6 +31,8 @@ export class ObrasSocialesController {
     isArray: true
   })
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(): Promise<ObraSocial[]> {
     return this.obraSocialService.findAll();
@@ -34,6 +46,8 @@ export class ObrasSocialesController {
   })
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
   @ApiResponse({ status: 404, description: 'Obra social no encontrada' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findById(@Param('id') id: string): Promise<ObraSocial> {
     return this.obraSocialService.findById(id);
@@ -47,6 +61,8 @@ export class ObrasSocialesController {
   })
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
   @ApiResponse({ status: 409, description: 'Conflicto - Ya existe una obra social con ese nombre' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() dto: CreateObraSocialDto): Promise<ObraSocial> {
     return this.obraSocialService.create(dto);
@@ -61,6 +77,8 @@ export class ObrasSocialesController {
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
   @ApiResponse({ status: 404, description: 'Obra social no encontrada' })
   @ApiResponse({ status: 409, description: 'Conflicto - Ya existe una obra social con ese nombre' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -73,6 +91,8 @@ export class ObrasSocialesController {
   @ApiResponse({ status: 200, description: 'Obra social eliminada exitosamente' })
   @ApiResponse({ status: 401, description: 'No autorizado - Token JWT no válido o no proporcionado' })
   @ApiResponse({ status: 404, description: 'Obra social no encontrada' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<void> {
     await this.obraSocialService.delete(id);

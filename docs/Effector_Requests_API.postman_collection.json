@@ -1,0 +1,536 @@
+{
+  "info": {
+    "name": "Effector Requests API",
+    "description": "API para el flujo completo de pedidos de efectores, cotizaciones y órdenes de provisión",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "request_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "quotation_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"axelcrkv@gmail.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Effector Requests",
+      "item": [
+        {
+          "name": "Get All Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Requests by Effector",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests?effectorId={{effector_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests"],
+              "query": [
+                {
+                  "key": "effectorId",
+                  "value": "{{effector_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Requests by State",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests?state=PENDIENTE",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests"],
+              "query": [
+                {
+                  "key": "state",
+                  "value": "PENDIENTE"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests/{{request_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests", "{{request_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('request_id', response.request_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pedido de insumos médicos urgente\",\n  \"description\": \"Pedido de jeringas y gasas para el área de emergencias\",\n  \"priority\": \"ALTA\",\n  \"delivery_date\": \"2024-02-15\",\n  \"delivery_address\": \"Hospital Central - Área de Emergencias\",\n  \"contact_person\": \"Dr. Juan Pérez\",\n  \"contact_phone\": \"+54911234567\",\n  \"contact_email\": \"juan.perez@hospital.com\",\n  \"items\": [\n    {\n      \"article_code\": \"MED001\",\n      \"article_name\": \"Jeringa 10ml\",\n      \"description\": \"Jeringa descartable de 10ml estéril\",\n      \"quantity\": 100,\n      \"unit_measure\": \"unidad\",\n      \"expiration_date\": \"2025-12-31\",\n      \"technical_specifications\": \"Estéril, descartable, con aguja 21G\",\n      \"estimated_unit_price\": 150.00,\n      \"estimated_total_price\": 15000.00\n    },\n    {\n      \"article_code\": \"MED002\",\n      \"article_name\": \"Gasa estéril 10x10\",\n      \"description\": \"Gasa estéril para curaciones\",\n      \"quantity\": 200,\n      \"unit_measure\": \"unidad\",\n      \"expiration_date\": \"2025-06-30\",\n      \"technical_specifications\": \"100% algodón, estéril\",\n      \"estimated_unit_price\": 50.00,\n      \"estimated_total_price\": 10000.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pedido de insumos médicos urgente - ACTUALIZADO\",\n  \"description\": \"Pedido actualizado con nuevas especificaciones\",\n  \"priority\": \"URGENTE\",\n  \"delivery_date\": \"2024-02-10\",\n  \"contact_phone\": \"+54911234568\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests/{{request_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests", "{{request_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Attachments",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests/{{request_id}}/attachments",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests", "{{request_id}}", "attachments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Request (Auditor)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"state_name\": \"APROBADO\",\n  \"observations\": \"Pedido aprobado para cotización. Todos los artículos son necesarios.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests/{{request_id}}/state",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests", "{{request_id}}", "state"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Request (Auditor)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"state_name\": \"RECHAZADO\",\n  \"observations\": \"Pedido rechazado. Falta justificación médica.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests/{{request_id}}/state",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests", "{{request_id}}", "state"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Request",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/effector-requests/{{request_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "effector-requests", "{{request_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Provider Quotations",
+      "item": [
+        {
+          "name": "Get Available Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provider-quotations/available-requests",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provider-quotations", "available-requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Quotations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provider-quotations",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provider-quotations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quotations by Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provider-quotations?requestId={{request_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provider-quotations"],
+              "query": [
+                {
+                  "key": "requestId",
+                  "value": "{{request_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quotations by Provider",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provider-quotations?providerId={{provider_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provider-quotations"],
+              "query": [
+                {
+                  "key": "providerId",
+                  "value": "{{provider_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quotation by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provider-quotations/{{quotation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provider-quotations", "{{quotation_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Quotation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('quotation_id', response.quotation_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{request_id}}\",\n  \"delivery_time_days\": 15,\n  \"delivery_terms\": \"Entrega en hospital durante horario laboral\",\n  \"payment_terms\": \"30 días fecha factura\",\n  \"warranty_terms\": \"12 meses de garantía\",\n  \"observations\": \"Productos de primera calidad, certificados ANMAT\",\n  \"valid_until\": \"2024-03-01\",\n  \"items\": [\n    {\n      \"request_item_id\": \"item-uuid-1\",\n      \"unit_price\": 140.00,\n      \"quantity\": 100,\n      \"delivery_time_days\": 10,\n      \"observations\": \"Disponible en stock\"\n    },\n    {\n      \"request_item_id\": \"item-uuid-2\",\n      \"unit_price\": 45.00,\n      \"quantity\": 200,\n      \"delivery_time_days\": 7,\n      \"observations\": \"Entrega inmediata\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/provider-quotations",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provider-quotations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Quotation",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provider-quotations/{{quotation_id}}/submit",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provider-quotations", "{{quotation_id}}", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Quotation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provider-quotations/{{quotation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provider-quotations", "{{quotation_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Provision Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provision-orders",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provision-orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/provision-orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provision-orders", "{{order_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Provision Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('order_id', response.order_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{request_id}}\",\n  \"delivery_date\": \"2024-02-20\",\n  \"delivery_address\": \"Hospital Central - Depósito Principal\",\n  \"observations\": \"Entrega coordinada con el área de logística\",\n  \"selected_quotations\": [\n    {\n      \"quotation_id\": \"{{quotation_id}}\",\n      \"selected_amount\": 23000.00,\n      \"delivery_points\": \"Depósito principal, Farmacia, Área de emergencias\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/provision-orders",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provision-orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ENVIADA\",\n  \"observations\": \"Orden enviada a proveedores seleccionados\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/provision-orders/{{order_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "provision-orders", "{{order_id}}", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/notifications/{{notification_id}}/read",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "notifications", "{{notification_id}}", "read"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+} 

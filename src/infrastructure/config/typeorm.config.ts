@@ -9,13 +9,13 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT, 10) || 5432,
-  username: process.env.DB_USERNAME || 'admin',
+  username: process.env.DB_USER || 'admin',
   password: process.env.DB_PASSWORD || 'admin',
-  database: process.env.DB_DATABASE || 'ssc_db',
+  database: process.env.DB_NAME || 'ssc_db',
   entities: [Address, Affiliate, ProveedorEntity, Usuario],
   migrations: [join(__dirname, '../persistence/postgres/migrations/*.{ts,js}')],
   synchronize: false, // Disabled to prevent automatic schema changes
   logging: process.env.NODE_ENV !== 'production',
-  migrationsRun: true, // Run migrations automatically
+  migrationsRun: false, // Disabled - use manual script.sql instead
   dropSchema: false, // Prevent accidental schema drops
 }; 

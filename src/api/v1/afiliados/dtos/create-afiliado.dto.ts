@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEmail, IsOptional, MaxLength, IsUUID, IsDate, IsIn } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsOptional, MaxLength, IsUUID, IsDate, IsIn, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -167,10 +167,12 @@ export class CreateAfiliadoDto {
   primaryAddressId?: string;
 
   @ApiPropertyOptional({
-    description: 'ID del usuario asociado',
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    description: 'IDs de las obras sociales asociadas',
+    example: ['123e4567-e89b-12d3-a456-426614174000', '987fcdeb-51a2-43d7-b789-123456789abc'],
+    type: [String]
   })
-  @IsUUID()
+  @IsArray()
+  @IsUUID('all', { each: true })
   @IsOptional()
-  userId?: string;
+  healthcareProviderIds?: string[];
 } 
