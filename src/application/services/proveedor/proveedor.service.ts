@@ -47,7 +47,8 @@ export class ProveedorService {
         contactPhone: createProveedorDto.contactPhone,
         contactEmail: createProveedorDto.contactEmail,
         createdBy: createProveedorDto.createdBy,
-        userId: createProveedorDto.userId
+        userId: createProveedorDto.userId,
+        specialties: createProveedorDto.specialties || []
       }
     );
 
@@ -83,7 +84,8 @@ export class ProveedorService {
         contactEmail: updateProveedorDto.contactEmail ?? existingProveedor.contactEmail,
         createdBy: existingProveedor.createdBy,
         updatedBy: updateProveedorDto.updatedBy,
-        userId: updateProveedorDto.userId ?? existingProveedor.userId
+        userId: updateProveedorDto.userId ?? existingProveedor.userId,
+        specialties: updateProveedorDto.specialties !== undefined ? updateProveedorDto.specialties : existingProveedor.specialties
       }
     );
 

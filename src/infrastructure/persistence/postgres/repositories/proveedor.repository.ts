@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { IProveedorRepository } from '../../../../domain/repositories/proveedor/proveedor.repository';
 import { Proveedor } from '../../../../domain/models/proveedor/proveedor.model';
-import { ProveedorEntity } from '../entities/proveedor.entity';
+import { ProveedorEntity, EspecialidadEntity } from '../entities/proveedor.entity';
 
 @Injectable()
 export class PostgresProveedorRepository implements IProveedorRepository {
@@ -26,7 +26,8 @@ export class PostgresProveedorRepository implements IProveedorRepository {
       entity.lastUpdate,
       entity.createdBy,
       entity.updatedBy,
-      entity.userId
+      entity.userId,
+      entity.especialidades ? entity.especialidades.map(esp => esp.especialidadId) : []
     );
   }
 
@@ -49,33 +50,70 @@ export class PostgresProveedorRepository implements IProveedorRepository {
   }
 
   async findAll(): Promise<Proveedor[]> {
-    const entities = await this.proveedorRepository.find();
+    const entities = await this.proveedorRepository.find({
+      relations: ['especialidades']
+    });
     return entities.map(entity => this.toDomain(entity));
   }
 
   async findById(providerId: string): Promise<Proveedor | null> {
-    const entity = await this.proveedorRepository.findOne({ where: { providerId } });
+    const entity = await this.proveedorRepository.findOne({ 
+      where: { providerId },
+      relations: ['especialidades']
+    });
     return entity ? this.toDomain(entity) : null;
   }
 
   async findByName(providerName: string): Promise<Proveedor | null> {
-    const entity = await this.proveedorRepository.findOne({ where: { providerName } });
+    const entity = await this.proveedorRepository.findOne({ 
+      where: { providerName },
+      relations: ['especialidades']
+    });
     return entity ? this.toDomain(entity) : null;
   }
 
   async findByCuit(cuit: string): Promise<Proveedor | null> {
-    const entity = await this.proveedorRepository.findOne({ where: { cuit } });
+    const entity = await this.proveedorRepository.findOne({ 
+      where: { cuit },
+      relations: ['especialidades']
+    });
     return entity ? this.toDomain(entity) : null;
   }
 
   async save(proveedor: Proveedor): Promise<Proveedor> {
     const entity = this.toEntity(proveedor);
+    
+    // Si hay especialidades, cargarlas
+    if (proveedor.specialties && proveedor.specialties.length > 0) {
+      const especialidadEntities = await this.proveedorRepository.manager
+        .getRepository(EspecialidadEntity)
+        .findBy({
+          especialidadId: In(proveedor.specialties)
+        });
+      
+      entity.especialidades = especialidadEntities;
+    }
+    
     const savedEntity = await this.proveedorRepository.save(entity);
     return this.toDomain(savedEntity);
   }
 
   async update(proveedor: Proveedor): Promise<Proveedor> {
     const entity = this.toEntity(proveedor);
+    
+    // Si hay especialidades, cargarlas
+    if (proveedor.specialties && proveedor.specialties.length > 0) {
+      const especialidadEntities = await this.proveedorRepository.manager
+        .getRepository(EspecialidadEntity)
+        .findBy({
+          especialidadId: In(proveedor.specialties)
+        });
+      
+      entity.especialidades = especialidadEntities;
+    } else {
+      entity.especialidades = [];
+    }
+    
     const updatedEntity = await this.proveedorRepository.save(entity);
     return this.toDomain(updatedEntity);
   }

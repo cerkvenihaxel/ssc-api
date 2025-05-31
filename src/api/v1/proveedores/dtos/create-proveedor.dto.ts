@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEmail, IsOptional, MaxLength, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsOptional, MaxLength, IsUUID, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProveedorDto {
@@ -80,4 +80,14 @@ export class CreateProveedorDto {
   @IsUUID()
   @IsOptional()
   userId?: string;
+
+  @ApiPropertyOptional({
+    description: 'IDs de las especialidades del proveedor',
+    example: ['87fbb9f7-2c8b-4179-ab2c-29cccd676b15', 'bbe1348e-bc64-4118-b0f8-b92e55820004'],
+    type: [String]
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  specialties?: string[];
 } 

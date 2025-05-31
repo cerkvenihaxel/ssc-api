@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Usuario } from '../../../infrastructure/persistence/postgres/entities/usuario.entity';
-import { ProveedorEntity } from '../../../infrastructure/persistence/postgres/entities/proveedor.entity';
+import { ProveedorEntity, EspecialidadEntity } from '../../../infrastructure/persistence/postgres/entities/proveedor.entity';
 import { CreateUserDto, CreateProviderDto, CreateAuditorDto, CreateMedicoDto, CreateEffectorDto, UserRole, UpdateAuditorDto } from '../../../api/v1/admin/dtos/create-user.dto';
 import { UpdateUserDto, UpdateUserPermissionsDto, BulkUpdateUsersDto } from '../../../api/v1/admin/dtos/update-user.dto';
 import { IUserRepository } from '../../../domain/repositories/user/user.repository';
@@ -620,6 +620,23 @@ export class AdminUserService {
       
       const userData = result.rows[0];
       
+      // Buscar especialidades usando TypeORM
+      let specialties: string[] = [];
+      try {
+        const providerEntity = await this.providerRepository.findOne({
+          where: { providerId: id },
+          relations: ['especialidades']
+        });
+
+        if (providerEntity && providerEntity.especialidades) {
+          specialties = providerEntity.especialidades.map(esp => esp.especialidadId);
+          console.log('Especialidades encontradas para proveedor:', specialties);
+        }
+      } catch (error) {
+        console.log('Error loading specialties:', error);
+        // Continuar sin especialidades si hay error
+      }
+      
       return {
         user_id: userData.user_id,
         email: userData.email,
@@ -636,6 +653,8 @@ export class AdminUserService {
         updated_at: userData.updated_at || userData.provider_last_update,
         last_login: userData.last_login,
         email_verified: userData.email_verified || false,
+        // Especialidades del proveedor
+        specialties: specialties,
         // Información específica del proveedor
         provider_info: {
           provider_id: userData.provider_id,
@@ -1036,6 +1055,54 @@ export class AdminUserService {
         `;
 
         await pool.query(providerUpdateQuery, providerUpdateValues);
+      }
+
+      // Actualizar especialidades si se proporcionan
+      if (updateData.specialties !== undefined) {
+        console.log('Actualizando especialidades del proveedor:', updateData.specialties);
+        
+        try {
+          // Usar el repositorio TypeORM para actualizar las especialidades
+          const providerEntity = await this.providerRepository.findOne({
+            where: { providerId: providerData.provider_info.provider_id },
+            relations: ['especialidades']
+          });
+
+          if (providerEntity) {
+            console.log('Provider entity encontrado:', providerEntity.providerId);
+            console.log('Especialidades actuales:', providerEntity.especialidades?.length || 0);
+            
+            // Si hay especialidades nuevas, cargarlas
+            if (updateData.specialties && updateData.specialties.length > 0) {
+              const especialidadEntities = await this.providerRepository.manager
+                .getRepository(EspecialidadEntity)
+                .findBy({
+                  especialidadId: In(updateData.specialties)
+                });
+              
+              console.log('Especialidades encontradas:', especialidadEntities.length);
+              console.log('Especialidades data:', especialidadEntities.map(e => ({ id: e.especialidadId, nombre: e.nombre })));
+              
+              providerEntity.especialidades = especialidadEntities;
+              console.log('Especialidades asignadas al provider entity');
+            } else {
+              // Si no hay especialidades, limpiar la relación
+              console.log('Limpiando especialidades del proveedor');
+              providerEntity.especialidades = [];
+            }
+
+            // Guardar los cambios
+            console.log('Intentando guardar provider entity...');
+            await this.providerRepository.save(providerEntity);
+            console.log('Especialidades actualizadas correctamente');
+          } else {
+            console.log('Provider entity no encontrado');
+          }
+        } catch (specialtyError) {
+          console.error('Error específico al actualizar especialidades:', specialtyError);
+          console.error('Stack trace:', specialtyError.stack);
+          throw new BadRequestException(`Error al actualizar especialidades: ${specialtyError.message}`);
+        }
       }
 
       // Devolver los datos actualizados

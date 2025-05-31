@@ -1,5 +1,29 @@
-import { Entity, Column, PrimaryColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
 import { Usuario } from './usuario.entity';
+
+@Entity('especialidades')
+export class EspecialidadEntity {
+  @PrimaryColumn('uuid', { name: 'especialidad_id' })
+  especialidadId: string;
+
+  @Column({ name: 'nombre', length: 100 })
+  nombre: string;
+
+  @Column({ name: 'descripcion', type: 'text', nullable: true })
+  descripcion: string | null;
+
+  @Column({ name: 'codigo', length: 20, nullable: true })
+  codigo: string | null;
+
+  @Column({ name: 'activa', type: 'boolean', default: true })
+  activa: boolean;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+}
 
 @Entity('proveedores')
 export class ProveedorEntity {
@@ -45,4 +69,18 @@ export class ProveedorEntity {
   @ManyToOne(() => Usuario, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'user_id' })
   user: Usuario;
+
+  @ManyToMany(() => EspecialidadEntity)
+  @JoinTable({
+    name: 'proveedores_especialidades',
+    joinColumn: {
+      name: 'provider_id',
+      referencedColumnName: 'providerId'
+    },
+    inverseJoinColumn: {
+      name: 'especialidad_id',
+      referencedColumnName: 'especialidadId'
+    }
+  })
+  especialidades: EspecialidadEntity[];
 } 

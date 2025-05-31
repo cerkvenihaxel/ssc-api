@@ -14,7 +14,8 @@ export class Proveedor {
     public readonly lastUpdate: Date,
     public readonly createdBy: string | null,
     public readonly updatedBy: string | null,
-    public readonly userId: string | null
+    public readonly userId: string | null,
+    public readonly specialties?: string[] // IDs de especialidades
   ) {}
 
   static create(
@@ -29,7 +30,8 @@ export class Proveedor {
       contactEmail?: string,
       createdBy?: string,
       updatedBy?: string,
-      userId?: string
+      userId?: string,
+      specialties?: string[]
     } = {}
   ): Proveedor {
     const now = new Date();
@@ -46,7 +48,8 @@ export class Proveedor {
       now,
       options.createdBy || null,
       options.updatedBy || null,
-      options.userId || null
+      options.userId || null,
+      options.specialties || []
     );
   }
 } 
