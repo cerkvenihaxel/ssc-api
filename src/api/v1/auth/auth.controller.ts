@@ -6,13 +6,19 @@ import { VerifyMagicLinkDto } from './dtos/magiclink/verify-magic-link.dto';
 import { LoginSuccessDto, UserInfoDto } from './dtos/user-info.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import { IUserRepository } from '../../../domain/repositories/user/user.repository';
+import { RouteService } from '../../../application/services/auth/route.service';
+import { Inject } from '@nestjs/common';
 
 @ApiTags('Autenticación')
 @Controller('v1/auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    @Inject('IUserRepository')
+    private readonly userRepository: IUserRepository,
+    private readonly routeService: RouteService
   ) {}
 
   @ApiOperation({ summary: 'Solicitar un magic link de acceso' })
@@ -36,8 +42,8 @@ export class AuthController {
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string
   ): Promise<{ message: string }> {
-    await this.authService.requestMagicLink(dto.email, ip, userAgent);
-    return { message: 'Se ha enviado un enlace de acceso a tu correo electrónico' };
+    const result = await this.authService.sendMagicLink(dto.email);
+    return result;
   }
 
   @ApiOperation({ summary: 'Verificar un magic link y obtener token JWT con información del usuario' })
@@ -50,10 +56,9 @@ export class AuthController {
   @Get('verify')
   async verifyMagicLink(
     @Query() dto: VerifyMagicLinkDto,
-    @Ip() ip: string,
-    @Headers('user-agent') userAgent: string
+    @Request() req: any
   ): Promise<LoginSuccessDto> {
-    return this.authService.verifyMagicLink(dto.token, ip, userAgent);
+    return this.authService.verifyMagicLink(dto.token, req);
   }
 
   @ApiOperation({ summary: 'Obtener información del usuario actual' })
@@ -67,7 +72,31 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getCurrentUser(@Request() req: any): Promise<UserInfoDto> {
-    return this.authService.getCurrentUser(req.user.userId);
+    const user = await this.userRepository.findById(req.user.userId);
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    const permissions = await this.userRepository.getUserPermissions(user.userId);
+    const userRole = await this.userRepository.getUserRole(user.userId);
+    const routeData = this.routeService.getRoutesByRole(userRole.name);
+
+    return {
+      userId: user.userId,
+      email: user.email,
+      nombre: user.nombre,
+      role: {
+        id: userRole.id,
+        name: userRole.name,
+        description: userRole.description,
+      },
+      status: user.status,
+      permissions,
+      defaultRoute: routeData.defaultRoute,
+      availableRoutes: routeData.routes,
+      lastLogin: user.lastLogin,
+      emailVerified: user.emailVerified,
+    };
   }
 
   @ApiOperation({ summary: 'Refrescar token de acceso' })
@@ -93,7 +122,29 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('refresh')
   async refreshToken(@Request() req: any): Promise<{ accessToken: string; expiresIn: number }> {
-    return this.authService.refreshToken(req.user.userId, req.user.sessionId);
+    const user = await this.userRepository.findById(req.user.userId);
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    const permissions = await this.userRepository.getUserPermissions(user.userId);
+    const userRole = await this.userRepository.getUserRole(user.userId);
+
+    const payload = {
+      sub: user.userId,
+      email: user.email,
+      roleId: user.roleId,
+      sessionId: req.user.sessionId,
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '24h',
+    });
+
+    return {
+      accessToken,
+      expiresIn: 24 * 60 * 60, // 24 horas en segundos
+    };
   }
 
   @ApiOperation({ summary: 'Cerrar sesión' })
