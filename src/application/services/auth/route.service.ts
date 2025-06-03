@@ -132,11 +132,32 @@ export class RouteService {
         ]
       },
       {
+        path: '/admin/deposito',
+        title: 'Depósito',
+        icon: 'WarehouseIcon',
+        description: 'Gestión de artículos y depósito',
+        order: 4,
+        children: [
+          {
+            path: '/admin/deposito/articulos',
+            title: 'Artículos',
+            icon: 'PackageIcon',
+            order: 1
+          },
+          {
+            path: '/admin/deposito/grupos',
+            title: 'Grupos de Artículos',
+            icon: 'FolderIcon',
+            order: 2
+          }
+        ]
+      },
+      {
         path: '/admin/requests',
         title: 'Pedidos',
         icon: 'RequestsIcon',
         description: 'Gestionar todos los pedidos',
-        order: 4,
+        order: 5,
         children: [
           {
             path: '/admin/requests/all',
@@ -163,14 +184,14 @@ export class RouteService {
         title: 'Reportes y Analytics',
         icon: 'AnalyticsIcon',
         description: 'Estadísticas del sistema',
-        order: 5
+        order: 6
       },
       {
         path: '/admin/settings',
         title: 'Configuración',
         icon: 'SettingsIcon',
         description: 'Configuración del sistema',
-        order: 6
+        order: 7
       }
     ];
   }

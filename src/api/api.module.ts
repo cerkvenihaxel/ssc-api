@@ -10,6 +10,7 @@ import { ProveedorModule } from './v1/proveedores/proveedor.module';
 import { AuthModule } from './v1/auth/auth.module';
 import { AdminUserModule } from './v1/admin/admin-user.module';
 import { AdminEspecialidadesModule } from './v1/admin/admin-especialidades.module';
+import { DepositoModule } from './v1/deposito/deposito.module';
 import { typeOrmConfig } from '../infrastructure/config/typeorm.config';
 
 @Module({
@@ -23,7 +24,8 @@ import { typeOrmConfig } from '../infrastructure/config/typeorm.config';
     ObrasSocialesModule,
     EspecialidadesModule,
     MedicosModule,
-    ProveedorModule
+    ProveedorModule,
+    DepositoModule
   ],
   controllers: [HealthController],
 })
