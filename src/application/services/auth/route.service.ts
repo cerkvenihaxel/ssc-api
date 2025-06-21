@@ -180,18 +180,51 @@ export class RouteService {
         ]
       },
       {
+        path: '/admin/medical-orders',
+        title: 'Pedidos Médicos',
+        icon: 'MedicalIcon',
+        description: 'Gestión de pedidos médicos con IA',
+        order: 6,
+        children: [
+          {
+            path: '/admin/medical-orders',
+            title: 'Lista de Pedidos',
+            icon: 'ListIcon',
+            order: 1
+          },
+          {
+            path: '/admin/medical-orders/create',
+            title: 'Crear Pedido',
+            icon: 'PlusIcon',
+            order: 2
+          },
+          {
+            path: '/admin/medical-orders/pending',
+            title: 'Pendientes de Autorización',
+            icon: 'ClockIcon',
+            order: 3
+          },
+          {
+            path: '/admin/medical-orders/ai-review',
+            title: 'Revisión IA',
+            icon: 'BrainIcon',
+            order: 4
+          }
+        ]
+      },
+      {
         path: '/admin/analytics',
         title: 'Reportes y Analytics',
         icon: 'AnalyticsIcon',
         description: 'Estadísticas del sistema',
-        order: 6
+        order: 7
       },
       {
         path: '/admin/settings',
         title: 'Configuración',
         icon: 'SettingsIcon',
         description: 'Configuración del sistema',
-        order: 7
+        order: 8
       }
     ];
   }

@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto';
 import { Address } from './address.model';
 
+// UUID especial para representar acciones del sistema
+const SYSTEM_UUID = '00000000-0000-0000-0000-000000000000';
+
 export class Afiliado {
   constructor(
     public readonly id: string,
@@ -66,7 +69,7 @@ export class Afiliado {
       null,  // signedTycVersion
       null,  // signedTycDate
       null,  // primaryAddressId
-      'SYSTEM',  // createdBy
+      SYSTEM_UUID,  // createdBy - UUID especial para el sistema
       null,  // updatedBy
       params.addresses
     );

@@ -42,7 +42,7 @@ export class AuthController {
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string
   ): Promise<{ message: string }> {
-    const result = await this.authService.sendMagicLink(dto.email);
+    const result = await this.authService.sendMagicLink(dto.email, { ip, userAgent });
     return result;
   }
 

@@ -225,7 +225,7 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
   async associateWithHealthcareProvider(affiliateId: string, healthcareProviderId: string): Promise<void> {
     // Verificar si ya existe una asociación activa para esta combinación específica
     const existingActive = await this.pool.query(
-      `SELECT id FROM afiliados_obras_sociales 
+      `SELECT affiliate_id FROM afiliados_obras_sociales 
        WHERE affiliate_id = $1 AND healthcare_provider_id = $2 AND association_status = 'ACTIVE'`,
       [affiliateId, healthcareProviderId]
     );
@@ -237,8 +237,8 @@ export class PostgresAfiliadoRepository implements IAfiliadoRepository {
 
     // Crear nueva asociación activa (el afiliado puede tener múltiples obras sociales)
     await this.pool.query(
-      `INSERT INTO afiliados_obras_sociales (id, affiliate_id, healthcare_provider_id, association_status, association_date)
-       VALUES (gen_random_uuid(), $1, $2, 'ACTIVE', NOW())`,
+      `INSERT INTO afiliados_obras_sociales (affiliate_id, healthcare_provider_id, association_status, association_date)
+       VALUES ($1, $2, 'ACTIVE', NOW())`,
       [affiliateId, healthcareProviderId]
     );
   }

@@ -5,6 +5,9 @@ import { CreateAfiliadoDto } from '../../../api/v1/afiliados/dtos/create-afiliad
 import { UpdateAfiliadoDto } from '../../../api/v1/afiliados/dtos/update-afiliado.dto';
 import * as bcrypt from 'bcrypt';
 
+// UUID especial para representar acciones del sistema
+const SYSTEM_UUID = '00000000-0000-0000-0000-000000000000';
+
 @Injectable()
 export class AfiliadoService {
   constructor(
@@ -24,7 +27,7 @@ export class AfiliadoService {
     return afiliado;
   }
 
-  async create(dto: CreateAfiliadoDto): Promise<Afiliado> {
+  async create(dto: CreateAfiliadoDto, createdBy: string): Promise<Afiliado> {
     // Verificar si ya existe un afiliado con el mismo email
     const existingEmail = await this.afiliadoRepository.findByEmail(dto.email);
     if (existingEmail) {
@@ -77,7 +80,7 @@ export class AfiliadoService {
       null,  // signedTycVersion
       null,  // signedTycDate
       dto.primaryAddressId || null,
-      null,  // createdBy - usar null en lugar de 'SYSTEM'
+      createdBy || SYSTEM_UUID,  // createdBy - UUID del usuario logueado o sistema
       null  // updatedBy
     );
 
@@ -93,7 +96,7 @@ export class AfiliadoService {
     return savedAfiliado;
   }
 
-  async update(affiliateId: string, dto: UpdateAfiliadoDto): Promise<Afiliado> {
+  async update(affiliateId: string, dto: UpdateAfiliadoDto, updatedBy: string): Promise<Afiliado> {
     const existingAfiliado = await this.findById(affiliateId);
 
     // Verificar email único si se está actualizando
@@ -151,7 +154,7 @@ export class AfiliadoService {
       existingAfiliado.signedTycDate,
       dto.primaryAddressId !== undefined ? dto.primaryAddressId : existingAfiliado.primaryAddressId,
       existingAfiliado.createdBy,
-      null  // updatedBy
+      updatedBy || SYSTEM_UUID  // updatedBy - UUID del usuario logueado o sistema
     );
 
     const savedAfiliado = await this.afiliadoRepository.update(updatedAfiliado);

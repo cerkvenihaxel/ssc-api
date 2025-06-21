@@ -9,7 +9,7 @@ export class PostgresMagicLinkRepository implements IMagicLinkRepository {
 
   async findById(magicLinkId: string): Promise<MagicLink | null> {
     const result = await this.pool.query(
-      'SELECT * FROM magic_links WHERE magic_link_id = $1',
+      'SELECT * FROM magic_links WHERE link_id = $1',
       [magicLinkId]
     );
 
@@ -45,17 +45,18 @@ export class PostgresMagicLinkRepository implements IMagicLinkRepository {
   async save(magicLink: MagicLink): Promise<MagicLink> {
     const result = await this.pool.query(
       `INSERT INTO magic_links 
-      (magic_link_id, user_id, token, created_at, expires_at, requested_ip, request_user_agent, is_active) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      (link_id, user_id, token, email, created_at, expires_at, requested_ip, request_user_agent, is_active) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
       RETURNING *`,
       [
         magicLink.magicLinkId,
         magicLink.userId,
         magicLink.token,
+        '', // email - se puede obtener del usuario si es necesario
         magicLink.createdAt,
         magicLink.expiresAt,
-        magicLink.requestedIp,
-        magicLink.requestUserAgent,
+        magicLink.requestedIp || null,
+        magicLink.requestUserAgent || null,
         magicLink.isActive
       ]
     );
@@ -66,13 +67,13 @@ export class PostgresMagicLinkRepository implements IMagicLinkRepository {
   async update(magicLink: MagicLink): Promise<MagicLink> {
     const result = await this.pool.query(
       `UPDATE magic_links 
-      SET used_at = $1, used_ip = $2, user_agent = $3, is_active = $4
-      WHERE magic_link_id = $5 
+      SET used_at = $1, used_ip = $2, used_user_agent = $3, is_active = $4
+      WHERE link_id = $5 
       RETURNING *`,
       [
         magicLink.usedAt,
-        magicLink.usedIp,
-        magicLink.userAgent,
+        magicLink.usedIp || null,
+        magicLink.userAgent || null,
         magicLink.isActive,
         magicLink.magicLinkId
       ]
@@ -83,14 +84,14 @@ export class PostgresMagicLinkRepository implements IMagicLinkRepository {
 
   private mapToEntity(row: any): MagicLink {
     return new MagicLink(
-      row.magic_link_id,
+      row.link_id,
       row.user_id,
       row.token,
       row.created_at,
       row.expires_at,
       row.used_at,
       row.used_ip,
-      row.user_agent,
+      row.used_user_agent,
       row.requested_ip,
       row.request_user_agent,
       row.is_active

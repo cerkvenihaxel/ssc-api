@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AfiliadoService } from '../../../application/services/afiliado/afiliado.service';
 import { CreateAfiliadoDto } from './dtos/create-afiliado.dto';
@@ -76,8 +76,9 @@ export class AfiliadosController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() dto: CreateAfiliadoDto): Promise<Afiliado> {
-    return this.afiliadoService.create(dto);
+  async create(@Body() dto: CreateAfiliadoDto, @Request() req: any): Promise<Afiliado> {
+    const createdBy = req.user?.userId;
+    return this.afiliadoService.create(dto, createdBy);
   }
 
   @ApiOperation({ summary: 'Actualizar un afiliado existente' })
@@ -94,9 +95,11 @@ export class AfiliadosController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() dto: UpdateAfiliadoDto
+    @Body() dto: UpdateAfiliadoDto,
+    @Request() req: any
   ): Promise<Afiliado> {
-    return this.afiliadoService.update(id, dto);
+    const updatedBy = req.user?.userId;
+    return this.afiliadoService.update(id, dto, updatedBy);
   }
 
   @ApiOperation({ summary: 'Eliminar un afiliado' })

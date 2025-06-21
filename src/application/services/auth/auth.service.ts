@@ -57,8 +57,8 @@ export class AuthService {
             link.createdAt,
             link.expiresAt,
             new Date(), // usedAt
-            '', // usedIp
-            '', // userAgent
+            null, // usedIp
+            null, // userAgent
             link.requestedIp,
             link.requestUserAgent,
             false // isActive
@@ -68,8 +68,8 @@ export class AuthService {
 
       const magicLink = MagicLink.create(
         user.userId,
-        '', // requestedIp - se actualizará cuando venga del controlador
-        '', // requestUserAgent
+        clientInfo?.ip || null, // requestedIp - usar la IP real del request
+        clientInfo?.userAgent || null, // requestUserAgent - usar el user agent real
         15 // 15 minutos de validez
       );
 
@@ -77,19 +77,24 @@ export class AuthService {
 
       const magicLinkUrl = `${this.configService.get('FRONTEND_URL')}/auth/verify?token=${magicLink.token}`;
 
-      await this.mailerService.sendMail({
-        to: email,
-        subject: 'Acceso al Sistema - SSC',
-        template: 'magic-link',
-        context: {
-          nombre: user.nombre,
-          loginUrl: magicLinkUrl,
-          expirationMinutes: 15,
-          currentYear: new Date().getFullYear(),
-        },
-      });
-
-      this.logger.log(`Magic link enviado a ${email}`);
+      // Intentar enviar email, pero no fallar si no hay configuración
+      try {
+        await this.mailerService.sendMail({
+          to: email,
+          subject: 'Acceso al Sistema - SSC',
+          template: 'magic-link',
+          context: {
+            nombre: user.nombre,
+            loginUrl: magicLinkUrl,
+            expirationMinutes: 15,
+            currentYear: new Date().getFullYear(),
+          },
+        });
+        this.logger.log(`Magic link enviado a ${email}`);
+      } catch (emailError) {
+        this.logger.warn(`No se pudo enviar email a ${email}:`, emailError.message);
+        this.logger.log(`Magic link generado manualmente: ${magicLinkUrl}`);
+      }
 
       return {
         message: 'Link de acceso enviado correctamente',
@@ -163,7 +168,7 @@ export class AuthService {
 
       // Marcar magic link como usado
       await this.magicLinkRepository.update(
-        magicLink.markAsUsed('', '') // ipAddress y userAgent se pasarán vacíos por ahora
+        magicLink.markAsUsed(ipAddress, userAgent) // Usar la IP y user agent reales del request
       );
 
       // Actualizar último login del usuario

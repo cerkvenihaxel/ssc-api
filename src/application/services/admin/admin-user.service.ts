@@ -1327,9 +1327,14 @@ export class AdminUserService {
         let auditorInfo = {};
         if (row.auditor_info) {
           try {
-            auditorInfo = JSON.parse(row.auditor_info);
+            // PostgreSQL JSONB ya viene como objeto, no como string
+            if (typeof row.auditor_info === 'string') {
+              auditorInfo = JSON.parse(row.auditor_info);
+            } else {
+              auditorInfo = row.auditor_info;
+            }
           } catch (error) {
-            console.log('⚠️ Error parsing auditor_info JSON for auditor:', row.user_id, error);
+            console.log('⚠️ Error parsing auditor_info:', error);
             auditorInfo = {};
           }
         }
@@ -1423,7 +1428,12 @@ export class AdminUserService {
       let auditorInfo = {};
       if (row.auditor_info) {
         try {
-          auditorInfo = JSON.parse(row.auditor_info);
+          // PostgreSQL JSONB ya viene como objeto, no como string
+          if (typeof row.auditor_info === 'string') {
+            auditorInfo = JSON.parse(row.auditor_info);
+          } else {
+            auditorInfo = row.auditor_info;
+          }
         } catch (error) {
           console.log('⚠️ Error parsing auditor_info:', error);
           auditorInfo = {};
@@ -1594,7 +1604,12 @@ export class AdminUserService {
           hasAuditorInfoColumn = true;
           
           if (currentInfoResult.rows.length > 0 && currentInfoResult.rows[0].auditor_info) {
-            currentInfo = JSON.parse(currentInfoResult.rows[0].auditor_info);
+            // PostgreSQL JSONB ya viene como objeto, no como string
+            if (typeof currentInfoResult.rows[0].auditor_info === 'string') {
+              currentInfo = JSON.parse(currentInfoResult.rows[0].auditor_info);
+            } else {
+              currentInfo = currentInfoResult.rows[0].auditor_info;
+            }
           }
         } catch (error) {
           console.log('🔧 Campo auditor_info no existe, intentando agregar...');
