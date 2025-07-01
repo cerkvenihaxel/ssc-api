@@ -153,29 +153,35 @@ export class RouteService {
         ]
       },
       {
-        path: '/admin/requests',
-        title: 'Pedidos',
-        icon: 'RequestsIcon',
-        description: 'Gestionar todos los pedidos',
+        path: '/admin/effector-requests',
+        title: 'Pedidos Efector',
+        icon: 'HospitalIcon',
+        description: 'Gestión de pedidos de efectores institucionales',
         order: 5,
         children: [
           {
-            path: '/admin/requests/all',
-            title: 'Todos los Pedidos',
-            icon: 'AllIcon',
+            path: '/admin/effector-requests/list',
+            title: 'Lista de Pedidos',
+            icon: 'ListIcon',
             order: 1
           },
           {
-            path: '/admin/requests/pending',
-            title: 'Pendientes',
-            icon: 'PendingIcon',
+            path: '/admin/effector-requests/create',
+            title: 'Crear Pedidos',
+            icon: 'PlusIcon',
             order: 2
           },
           {
-            path: '/admin/requests/approved',
-            title: 'Aprobados',
-            icon: 'CheckIcon',
+            path: '/admin/effector-requests',
+            title: 'Pendientes de Autorización',
+            icon: 'ClockIcon',
             order: 3
+          },
+          {
+            path: '/admin/effector-requests/ai-review',
+            title: 'Revisión IA',
+            icon: 'BrainIcon',
+            order: 4
           }
         ]
       },
@@ -199,16 +205,10 @@ export class RouteService {
             order: 2
           },
           {
-            path: '/admin/medical-orders/pending',
-            title: 'Pendientes de Autorización',
-            icon: 'ClockIcon',
-            order: 3
-          },
-          {
             path: '/admin/medical-orders/ai-review',
             title: 'Revisión IA',
             icon: 'BrainIcon',
-            order: 4
+            order: 3
           }
         ]
       },

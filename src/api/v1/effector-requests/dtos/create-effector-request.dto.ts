@@ -3,6 +3,11 @@ import { IsString, IsNotEmpty, IsOptional, IsArray, IsDateString, IsEnum, IsNumb
 import { Type } from 'class-transformer';
 
 class CreateEffectorRequestItemDto {
+  @ApiProperty({ required: false, description: 'ID del artículo del depósito' })
+  @IsOptional()
+  @IsString()
+  article_id?: string;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
@@ -39,20 +44,28 @@ class CreateEffectorRequestItemDto {
   @IsString()
   technical_specifications?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, description: 'Precio unitario estimado' })
   @IsOptional()
   @IsNumber()
-  @IsPositive()
   estimated_unit_price?: number;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, description: 'Precio total estimado' })
   @IsOptional()
   @IsNumber()
-  @IsPositive()
   estimated_total_price?: number;
+
+  @ApiProperty({ required: false, description: 'Justificación del artículo solicitado' })
+  @IsOptional()
+  @IsString()
+  justification?: string;
 }
 
 export class CreateEffectorRequestDto {
+  @ApiProperty({ required: false, description: 'ID del efector (solo para admins)' })
+  @IsOptional()
+  @IsString()
+  effector_id?: string;
+
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -98,4 +111,24 @@ export class CreateEffectorRequestDto {
   @ValidateNested({ each: true })
   @Type(() => CreateEffectorRequestItemDto)
   items: CreateEffectorRequestItemDto[];
+
+  @ApiProperty({ required: false, description: 'Departamento o área del efector' })
+  @IsOptional()
+  @IsString()
+  institution_department?: string;
+
+  @ApiProperty({ required: false, description: 'Justificación institucional del pedido' })
+  @IsOptional()
+  @IsString()
+  institutional_justification?: string;
+
+  @ApiProperty({ required: false, description: 'Beneficiarios estimados' })
+  @IsOptional()
+  @IsNumber()
+  estimated_beneficiaries?: number;
+
+  @ApiProperty({ required: false, description: 'Contexto o urgencia del pedido' })
+  @IsOptional()
+  @IsString()
+  urgency_context?: string;
 } 

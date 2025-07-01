@@ -34,7 +34,10 @@ CREATE TABLE effector_requests (
   contact_person VARCHAR(100),
   contact_phone VARCHAR(50),
   contact_email VARCHAR(100),
-  total_estimated_amount DECIMAL(15,2),
+  institution_department VARCHAR(100),
+  institutional_justification TEXT,
+  estimated_beneficiaries INTEGER,
+  urgency_context TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   created_by UUID REFERENCES usuarios(user_id),
@@ -45,6 +48,7 @@ CREATE TABLE effector_requests (
 CREATE TABLE effector_request_items (
   item_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   request_id UUID NOT NULL REFERENCES effector_requests(request_id) ON DELETE CASCADE,
+  article_id UUID REFERENCES articulos(articulo_id),
   article_code VARCHAR(50),
   article_name VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
@@ -52,8 +56,7 @@ CREATE TABLE effector_request_items (
   unit_measure VARCHAR(50),
   expiration_date DATE,
   technical_specifications TEXT,
-  estimated_unit_price DECIMAL(12,2),
-  estimated_total_price DECIMAL(15,2),
+  justification TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -64,7 +67,7 @@ CREATE TABLE effector_request_attachments (
   request_id UUID NOT NULL REFERENCES effector_requests(request_id) ON DELETE CASCADE,
   file_name VARCHAR(255) NOT NULL,
   file_path VARCHAR(500) NOT NULL,
-  file_type VARCHAR(10) NOT NULL CHECK (file_type IN ('pdf', 'docx', 'doc', 'xlsx', 'xls')),
+  file_type VARCHAR(10) NOT NULL CHECK (file_type IN ('pdf', 'docx', 'doc', 'xlsx', 'xls', 'jpg', 'jpeg', 'png')),
   file_size BIGINT,
   uploaded_by UUID REFERENCES usuarios(user_id),
   uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

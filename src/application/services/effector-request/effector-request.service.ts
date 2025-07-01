@@ -4,12 +4,15 @@ import { EffectorRequestRepository } from '../../../domain/repositories/effector
 import { CreateEffectorRequestDto } from '../../../api/v1/effector-requests/dtos/create-effector-request.dto';
 import { UpdateEffectorRequestDto } from '../../../api/v1/effector-requests/dtos/update-effector-request.dto';
 import { UpdateRequestStateDto } from '../../../api/v1/effector-requests/dtos/update-request-state.dto';
+import { ApproveEffectorRequestDto } from '../../../api/v1/effector-requests/dtos/approve-effector-request.dto';
+import { EffectorAIAnalysisService, EffectorRequestAIAnalysis } from './effector-ai-analysis.service';
 
 @Injectable()
 export class EffectorRequestService {
   constructor(
     @Inject('EffectorRequestRepository')
     private readonly effectorRequestRepository: EffectorRequestRepository,
+    private readonly aiAnalysisService: EffectorAIAnalysisService,
   ) {}
 
   async findAll(): Promise<EffectorRequest[]> {
@@ -32,12 +35,12 @@ export class EffectorRequestService {
     return this.effectorRequestRepository.findByState(stateId);
   }
 
-  async create(createDto: CreateEffectorRequestDto, effectorId: string): Promise<EffectorRequest> {
+  async create(createDto: CreateEffectorRequestDto, effectorId: string, createdBy?: string): Promise<EffectorRequest> {
     // Generate unique request number
     const timestamp = Date.now();
     const requestNumber = `REQ-${timestamp}`;
 
-    // Calculate total estimated amount
+    // Calculate total estimated amount from items
     const totalEstimatedAmount = createDto.items?.reduce((total, item) => {
       return total + (item.estimated_total_price || (item.estimated_unit_price || 0) * item.quantity);
     }, 0) || 0;
@@ -54,7 +57,19 @@ export class EffectorRequestService {
       contact_phone: createDto.contact_phone,
       contact_email: createDto.contact_email,
       total_estimated_amount: totalEstimatedAmount,
-      created_by: effectorId,
+      created_by: createdBy || effectorId,
+      // Pass the items to be saved
+      items: createDto.items?.map(item => ({
+        article_code: item.article_code,
+        article_name: item.article_name,
+        description: item.description,
+        quantity: item.quantity,
+        unit_measure: item.unit_measure,
+        expiration_date: item.expiration_date ? new Date(item.expiration_date) : undefined,
+        technical_specifications: item.technical_specifications,
+        estimated_unit_price: item.estimated_unit_price,
+        estimated_total_price: item.estimated_total_price,
+      })) as any || [],
       // Will be set to PENDIENTE state by default in repository
     };
 
@@ -133,5 +148,117 @@ export class EffectorRequestService {
     // For now, return a placeholder - this needs to be implemented
     // in the repository layer
     return 'state-id-placeholder';
+  }
+
+  async analyzeWithAI(id: string): Promise<EffectorRequestAIAnalysis> {
+    const request = await this.findById(id);
+    if (!request) {
+      throw new NotFoundException(`Effector request with ID ${id} not found`);
+    }
+
+    const analysis = await this.aiAnalysisService.analyzeEffectorRequest(request);
+    
+    // Optionally save the analysis result in the database
+    await this.effectorRequestRepository.update(id, {
+      ai_analysis_result: analysis as any,
+      ai_analyzed_at: new Date(),
+      updated_by: 'AI_SYSTEM'
+    } as any);
+
+    return analysis;
+  }
+
+  async approveRequest(
+    id: string, 
+    approvalDto: ApproveEffectorRequestDto, 
+    approvedBy: string
+  ): Promise<EffectorRequest> {
+    const request = await this.findById(id);
+    if (!request) {
+      throw new NotFoundException(`Effector request with ID ${id} not found`);
+    }
+
+    // Determine the new state based on decision
+    let newStateId: string;
+    const stateMapping = {
+      'approved': '49e0efbd-ee16-4e5b-a1a6-57c333ab309d', // APROBADO
+      'rejected': '3ed234dc-7c8a-4568-97cc-a17791bd83ef', // RECHAZADO
+      'partial': 'fbeb1fac-8570-440d-9624-21022f271643',  // EN_COTIZACION (for partial approvals)
+      'needs_review': 'b5812d46-eb4d-434c-b548-90d2047c314d' // PENDIENTE
+    };
+
+    newStateId = stateMapping[approvalDto.decision] || stateMapping['needs_review'];
+
+    const updates: any = {
+      state_id: newStateId,
+      approval_comments: approvalDto.approval_comments,
+      rejection_reason: approvalDto.rejection_reason,
+      approved_by: approvedBy,
+      approved_at: new Date(),
+      requires_medical_review: approvalDto.requires_medical_review,
+      requires_economic_review: approvalDto.requires_economic_review,
+      administrative_notes: approvalDto.administrative_notes,
+      budget_impact_analysis: approvalDto.budget_impact_analysis,
+      delivery_conditions: approvalDto.delivery_conditions,
+      expiration_requirements: approvalDto.expiration_requirements,
+      updated_by: approvedBy
+    };
+
+    // Update the main request
+    const updatedRequest = await this.effectorRequestRepository.update(id, updates);
+
+    // If there are item-level approvals, handle them
+    if (approvalDto.items_approval && approvalDto.items_approval.length > 0) {
+      await this.processItemApprovals(id, approvalDto.items_approval);
+    }
+
+    return updatedRequest;
+  }
+
+  private async processItemApprovals(requestId: string, itemApprovals: any[]): Promise<void> {
+    // This would require extending the repository to handle item-level updates
+    // For now, we'll store it as metadata
+    for (const itemApproval of itemApprovals) {
+      // In a real implementation, you'd update the effector_request_items table
+      console.log(`Processing approval for item ${itemApproval.item_id}:`, itemApproval);
+    }
+  }
+
+  async getRequestsRequiringReview(): Promise<EffectorRequest[]> {
+    // Get requests that need manual review
+    return this.effectorRequestRepository.findByState('b5812d46-eb4d-434c-b548-90d2047c314d'); // PENDIENTE
+  }
+
+  async getRequestsByPriority(priority: string): Promise<EffectorRequest[]> {
+    return this.effectorRequestRepository.findAll()
+      .then(requests => requests.filter(r => r.priority === priority));
+  }
+
+  async getRequestStatistics(): Promise<any> {
+    const allRequests = await this.effectorRequestRepository.findAll();
+    
+    // Asegurar que los montos sean números
+    const totalAmount = allRequests.reduce((sum, r) => sum + (parseFloat(r.total_estimated_amount?.toString() || '0') || 0), 0);
+    const averageAmount = allRequests.length > 0 ? totalAmount / allRequests.length : 0;
+    
+    const stats = {
+      total: allRequests.length,
+      pendiente: allRequests.filter(r => r.state?.state_name === 'PENDIENTE').length,
+      aprobado: allRequests.filter(r => r.state?.state_name === 'APROBADO').length,
+      rechazado: allRequests.filter(r => r.state?.state_name === 'RECHAZADO').length,
+      en_cotizacion: allRequests.filter(r => r.state?.state_name === 'EN_COTIZACION').length,
+      cotizado: allRequests.filter(r => r.state?.state_name === 'COTIZADO').length,
+      // Estadísticas de montos estimados
+      totalAmount: totalAmount,
+      averageAmount: averageAmount,
+      // Estadísticas de items
+      totalItems: allRequests.reduce((sum, r) => sum + (r.items?.length || 0), 0),
+      averageItemsPerRequest: allRequests.length > 0 ? 
+        allRequests.reduce((sum, r) => sum + (r.items?.length || 0), 0) / allRequests.length : 0,
+      urgentRequests: allRequests.filter(r => r.priority === 'URGENTE').length,
+      highPriorityRequests: allRequests.filter(r => r.priority === 'ALTA').length
+    };
+
+    return stats;
   }
 } 

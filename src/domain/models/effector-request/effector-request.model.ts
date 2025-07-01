@@ -4,6 +4,9 @@ export class EffectorRequestItem {
   @ApiProperty()
   item_id: string;
 
+  @ApiProperty({ required: false, description: 'ID del artículo en el depósito' })
+  article_id?: string;
+
   @ApiProperty()
   article_code?: string;
 
@@ -31,11 +34,27 @@ export class EffectorRequestItem {
   @ApiProperty()
   estimated_total_price?: number;
 
+  @ApiProperty({ description: 'Justificación del artículo solicitado' })
+  justification?: string;
+
   @ApiProperty()
   created_at: Date;
 
   @ApiProperty()
   updated_at: Date;
+
+  // Información del artículo del depósito (cuando está relacionado)
+  @ApiProperty({ required: false })
+  article?: {
+    articuloId: string;
+    codigo: string;
+    nombre: string;
+    descripcion?: string;
+    presentacion?: string;
+    stock?: number;
+    grupoId?: string;
+    grupoNombre?: string;
+  };
 }
 
 export class EffectorRequestAttachment {
@@ -109,6 +128,18 @@ export class EffectorRequest {
   total_estimated_amount?: number;
 
   @ApiProperty()
+  institution_department?: string;
+
+  @ApiProperty()
+  institutional_justification?: string;
+
+  @ApiProperty()
+  estimated_beneficiaries?: number;
+
+  @ApiProperty()
+  urgency_context?: string;
+
+  @ApiProperty()
   created_at: Date;
 
   @ApiProperty()
@@ -125,4 +156,28 @@ export class EffectorRequest {
 
   @ApiProperty({ type: [EffectorRequestAttachment] })
   attachments?: EffectorRequestAttachment[];
+
+  // Información del efector (cuando está relacionado)
+  @ApiProperty({ required: false })
+  effector?: {
+    user_id: string;
+    nombre: string;
+    email: string;
+    cuil?: string;
+    telefono?: string;
+    direccion?: string;
+    localidad?: string;
+    provincia?: string;
+  };
+
+  // Información específica del efector para mostrar en frontend
+  @ApiProperty({ required: false })
+  effector_info?: {
+    effector_name: string;
+    effector_type: string;
+    contact_name?: string;
+    contact_phone?: string;
+    contact_email?: string;
+    address?: string;
+  };
 } 

@@ -1814,7 +1814,23 @@ export class AdminUserService {
         let effectorInfo = {};
         if (row.effector_info) {
           try {
-            effectorInfo = JSON.parse(row.effector_info);
+            // Si effector_info es de tipo jsonb, ya viene parseado como objeto
+            const parsedInfo = typeof row.effector_info === 'string' 
+              ? JSON.parse(row.effector_info) 
+              : row.effector_info;
+            
+            // Mapear campos del JSON a los esperados por el frontend
+            effectorInfo = {
+              effector_name: parsedInfo.effector_name || parsedInfo.institution_name || row.nombre,
+              effector_type: parsedInfo.effector_type || parsedInfo.institution_type || parsedInfo.tipo || 'No especificado',
+              cuit: parsedInfo.cuit,
+              contact_name: parsedInfo.contact_name,
+              contact_phone: parsedInfo.contact_phone || parsedInfo.telefono,
+              contact_email: parsedInfo.contact_email,
+              address: parsedInfo.address || parsedInfo.direccion,
+              localidad: parsedInfo.localidad,
+              provincia: parsedInfo.provincia
+            };
           } catch (error) {
             console.log('⚠️ Error parsing effector_info JSON for effector:', row.user_id, error);
             effectorInfo = {};
@@ -1834,7 +1850,7 @@ export class AdminUserService {
           updated_at: row.updated_at,
           last_login: row.last_login,
           email_verified: row.email_verified,
-          // Información específica del efector
+          // Información específica del efector con mapeo correcto
           effector_info: effectorInfo
         };
       });
@@ -1913,7 +1929,23 @@ export class AdminUserService {
       
       if (row.effector_info) {
         try {
-          effector_info = JSON.parse(row.effector_info);
+          // Si effector_info es de tipo jsonb, ya viene parseado como objeto
+          const parsedInfo = typeof row.effector_info === 'string' 
+            ? JSON.parse(row.effector_info) 
+            : row.effector_info;
+          
+          // Mapear campos del JSON a los esperados por el frontend
+          effector_info = {
+            effector_name: parsedInfo.effector_name || parsedInfo.institution_name || row.nombre,
+            effector_type: parsedInfo.effector_type || parsedInfo.institution_type || parsedInfo.tipo || 'No especificado',
+            cuit: parsedInfo.cuit,
+            contact_name: parsedInfo.contact_name,
+            contact_phone: parsedInfo.contact_phone || parsedInfo.telefono,
+            contact_email: parsedInfo.contact_email,
+            address: parsedInfo.address || parsedInfo.direccion,
+            localidad: parsedInfo.localidad,
+            provincia: parsedInfo.provincia
+          };
         } catch (error) {
           console.log('⚠️ Error parsing effector_info:', error);
           effector_info = {};
@@ -2090,7 +2122,10 @@ export class AdminUserService {
           hasEffectorInfoColumn = true;
           
           if (currentInfoResult.rows.length > 0 && currentInfoResult.rows[0].effector_info) {
-            currentInfo = JSON.parse(currentInfoResult.rows[0].effector_info);
+            // Si effector_info es de tipo jsonb, ya viene parseado como objeto
+            currentInfo = typeof currentInfoResult.rows[0].effector_info === 'string' 
+              ? JSON.parse(currentInfoResult.rows[0].effector_info)
+              : currentInfoResult.rows[0].effector_info;
           }
         } catch (error) {
           console.log('🔧 Campo effector_info no existe, intentando agregar...');

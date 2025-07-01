@@ -12,6 +12,7 @@ import { AdminUserModule } from './v1/admin/admin-user.module';
 import { AdminEspecialidadesModule } from './v1/admin/admin-especialidades.module';
 import { DepositoModule } from './v1/deposito/deposito.module';
 import { MedicalOrdersModule } from './v1/medical-orders/medical-orders.module';
+import { EffectorRequestModule } from './v1/effector-requests/effector-request.module';
 import { typeOrmConfig } from '../infrastructure/config/typeorm.config';
 
 @Module({
@@ -27,7 +28,8 @@ import { typeOrmConfig } from '../infrastructure/config/typeorm.config';
     MedicosModule,
     ProveedorModule,
     DepositoModule,
-    MedicalOrdersModule
+    MedicalOrdersModule,
+    EffectorRequestModule
   ],
   controllers: [HealthController],
 })

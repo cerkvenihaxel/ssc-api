@@ -167,7 +167,7 @@ export class PostgresMedicoRepository implements IMedicoRepository {
       FROM medicos m
       LEFT JOIN usuarios u ON m.user_id = u.user_id
       INNER JOIN medicos_obras_sociales mos ON m.medico_id = mos.medico_id
-      WHERE mos.healthcare_provider_id = $1 AND mos.association_status = 'active'
+      WHERE mos.healthcare_provider_id = $1 AND mos.association_status = 'ACTIVE'
       ORDER BY m.last_name ASC, m.first_name ASC
     `, [obraSocialId]);
     return result.rows.map(row => this.mapToEntity(row));
@@ -271,10 +271,10 @@ export class PostgresMedicoRepository implements IMedicoRepository {
 
   async associateWithObraSocial(medicoId: string, obraSocialId: string): Promise<void> {
     await this.pool.query(
-      `INSERT INTO medicos_obras_sociales (id, medico_id, healthcare_provider_id, association_status, association_date)
-       VALUES (gen_random_uuid(), $1, $2, 'active', CURRENT_TIMESTAMP)
+      `INSERT INTO medicos_obras_sociales (medico_id, healthcare_provider_id, association_status, association_date)
+       VALUES ($1, $2, 'ACTIVE', CURRENT_TIMESTAMP)
        ON CONFLICT (medico_id, healthcare_provider_id) 
-       DO UPDATE SET association_status = 'active', association_date = CURRENT_TIMESTAMP`,
+       DO UPDATE SET association_status = 'ACTIVE', association_date = CURRENT_TIMESTAMP`,
       [medicoId, obraSocialId]
     );
   }
@@ -282,7 +282,7 @@ export class PostgresMedicoRepository implements IMedicoRepository {
   async dissociateFromObraSocial(medicoId: string, obraSocialId: string): Promise<void> {
     await this.pool.query(
       `UPDATE medicos_obras_sociales 
-       SET association_status = 'inactive' 
+       SET association_status = 'INACTIVE' 
        WHERE medico_id = $1 AND healthcare_provider_id = $2`,
       [medicoId, obraSocialId]
     );
@@ -291,7 +291,7 @@ export class PostgresMedicoRepository implements IMedicoRepository {
   async getObrasSocialesAssociated(medicoId: string): Promise<string[]> {
     const result = await this.pool.query(
       `SELECT healthcare_provider_id FROM medicos_obras_sociales 
-       WHERE medico_id = $1 AND association_status = 'active'`,
+       WHERE medico_id = $1 AND association_status = 'ACTIVE'`,
       [medicoId]
     );
     return result.rows.map(row => row.healthcare_provider_id);

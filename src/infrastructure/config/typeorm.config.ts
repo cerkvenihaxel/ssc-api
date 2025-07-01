@@ -20,6 +20,13 @@ import { AiItemAnalysis } from '../../entities/ai-item-analysis.entity';
 import { AiRiskFactor } from '../../entities/ai-risk-factor.entity';
 import { AiRecommendation } from '../../entities/ai-recommendation.entity';
 import { AiCorrectionSuggestion } from '../../entities/ai-correction-suggestion.entity';
+// Effector Request entities
+import { EffectorRequestEntity } from '../entities/effector-request.entity';
+import { EffectorRequestItemEntity } from '../entities/effector-request-item.entity';
+import { EffectorRequestAttachmentEntity } from '../entities/effector-request-attachment.entity';
+import { EffectorRequestStateEntity } from '../entities/effector-request-state.entity';
+// Activity Log entity
+import { ActivityLogEntity } from '../entities/activity-log.entity';
 import { join } from 'path';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
@@ -51,7 +58,14 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     AiItemAnalysis,
     AiRiskFactor,
     AiRecommendation,
-    AiCorrectionSuggestion
+    AiCorrectionSuggestion,
+    // Effector Request entities
+    EffectorRequestEntity,
+    EffectorRequestItemEntity,
+    EffectorRequestAttachmentEntity,
+    EffectorRequestStateEntity,
+    // Activity Log entity
+    ActivityLogEntity
   ],
   migrations: [join(__dirname, '../persistence/postgres/migrations/*.{ts,js}')],
   synchronize: false, // Disabled to prevent automatic schema changes
