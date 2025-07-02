@@ -10,7 +10,6 @@ import {
   Req,
   HttpStatus,
   HttpException,
-  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -130,7 +129,7 @@ export class MedicalOrdersController {
   })
   @ApiResponse({ status: 404, description: 'Pedido médico no encontrado' })
   async getMedicalOrderById(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<MedicalOrderResponseDto> {
     try {
@@ -166,7 +165,7 @@ export class MedicalOrdersController {
   @ApiResponse({ status: 404, description: 'Pedido médico no encontrado' })
   @ApiResponse({ status: 400, description: 'El pedido no puede ser modificado en su estado actual' })
   async updateMedicalOrder(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateDto: UpdateMedicalOrderDto,
     @Req() req: any,
   ): Promise<MedicalOrderResponseDto> {
@@ -198,7 +197,7 @@ export class MedicalOrdersController {
   @ApiResponse({ status: 404, description: 'Pedido médico no encontrado' })
   @ApiResponse({ status: 400, description: 'El pedido no puede ser eliminado en su estado actual' })
   async deleteMedicalOrder(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<void> {
     try {
@@ -233,7 +232,7 @@ export class MedicalOrdersController {
   @ApiResponse({ status: 404, description: 'Pedido médico no encontrado' })
   @ApiResponse({ status: 400, description: 'El pedido no puede ser autorizado en su estado actual' })
   async authorizeMedicalOrder(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() authorizeDto: AuthorizeOrderDto,
     @Req() req: any,
   ): Promise<MedicalOrderResponseDto> {
@@ -262,7 +261,7 @@ export class MedicalOrdersController {
   @ApiResponse({ status: 400, description: 'El pedido no puede ser analizado en su estado actual' })
   @ApiResponse({ status: 503, description: 'Servicio de IA no disponible' })
   async aiAuthorizeMedicalOrder(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<MedicalOrderResponseDto> {
     try {
@@ -289,7 +288,7 @@ export class MedicalOrdersController {
   @ApiResponse({ status: 400, description: 'El pedido no puede ser corregido en su estado actual' })
   @ApiResponse({ status: 403, description: 'No tiene permisos para corregir este pedido' })
   async correctMedicalOrder(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() correctDto: CorrectMedicalOrderDto,
     @Req() req: any,
   ): Promise<MedicalOrderResponseDto> {
@@ -312,7 +311,7 @@ export class MedicalOrdersController {
   @ApiResponse({ status: 200, description: 'Historial de autorizaciones' })
   @ApiResponse({ status: 404, description: 'Pedido médico no encontrado' })
   async getAuthorizationHistory(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<any[]> {
     try {
@@ -337,7 +336,7 @@ export class MedicalOrdersController {
   })
   @ApiResponse({ status: 404, description: 'Pedido médico no encontrado o sin análisis de IA' })
   async getAIAnalysis(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<any> {
     try {
@@ -366,7 +365,7 @@ export class MedicalOrdersController {
   })
   @ApiResponse({ status: 404, description: 'Pedido médico no encontrado' })
   async getAIAnalysisHistory(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<any[]> {
     try {
@@ -387,8 +386,8 @@ export class MedicalOrdersController {
   @ApiResponse({ status: 200, description: 'Análisis de IA del item' })
   @ApiResponse({ status: 404, description: 'Pedido o item no encontrado' })
   async getItemAIAnalysis(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Param('itemId', ParseUUIDPipe) itemId: string,
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
     @Req() req: any,
   ): Promise<any> {
     try {
@@ -423,7 +422,7 @@ export class MedicalOrdersController {
   @ApiResponse({ status: 404, description: 'Pedido no encontrado' })
   @ApiResponse({ status: 400, description: 'Error en la solicitud' })
   async refreshAIAnalysis(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Req() req: any,
   ): Promise<MedicalOrderResponseDto> {
     try {

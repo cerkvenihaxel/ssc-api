@@ -29,6 +29,14 @@ export class MedicalOrderTypeOrmEntity {
   @Column({ type: 'integer' })
   urgency_id: number;
 
+  // NUEVO: Campo para controlar disponibilidad para cotización
+  @Column({ type: 'boolean', default: false })
+  available_for_quotation: boolean;
+
+  // NUEVO: Especialidades asociadas al pedido
+  @Column({ type: 'jsonb', nullable: true })
+  specialties: string[]; // Array de IDs de especialidades
+
   // Información del pedido
   @Column({ type: 'varchar', length: 200 })
   title: string;

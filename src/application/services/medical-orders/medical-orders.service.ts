@@ -6,6 +6,7 @@ import { CreateMedicalOrderDto, UpdateMedicalOrderDto, AuthorizeOrderDto, Medica
 import { OpenAIAuthorizationService } from '../../../infrastructure/services/openai-authorization.service';
 import { IAfiliadoRepository } from '../../../domain/repositories/afiliado/afiliado.repository';
 import { AiAnalysisPersistenceService, AIAnalysisResult } from './ai-analysis-persistence.service';
+import { IdObfuscatorUtil } from '../../../shared/utils/id-obfuscator.util';
 
 @Injectable()
 export class MedicalOrdersService {
@@ -326,8 +327,24 @@ export class MedicalOrdersService {
   }
 
   async getMedicalOrderById(id: string): Promise<MedicalOrderResponseDto> {
+    let deobfuscatedId: string;
+    
     try {
       console.log(`🔍 Obteniendo detalles del pedido ${id}`);
+      
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid, wasObfuscated } = IdObfuscatorUtil.smartDeobfuscate(id);
+      
+      if (!isValid) {
+        console.error(`❌ ID inválido: ${id}`);
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      if (wasObfuscated) {
+        console.log(`🔓 ID desofuscado: ${id} -> ${realId}`);
+      }
+      
+      deobfuscatedId = realId;
       
       // Usar consulta SQL con JOINs para obtener toda la información de una vez
       const sqlQuery = `
@@ -376,7 +393,7 @@ export class MedicalOrdersService {
       `;
 
       console.log('📊 Ejecutando consulta para obtener detalles del pedido...');
-      const orderResult = await this.medicalOrderRepository.query(sqlQuery, [id]);
+      const orderResult = await this.medicalOrderRepository.query(sqlQuery, [deobfuscatedId]);
 
       if (!orderResult || orderResult.length === 0) {
         throw new NotFoundException('Pedido médico no encontrado');
@@ -411,13 +428,13 @@ export class MedicalOrdersService {
         ORDER BY moi.created_at
       `;
 
-      const items = await this.medicalOrderRepository.query(itemsQuery, [id]);
+      const items = await this.medicalOrderRepository.query(itemsQuery, [deobfuscatedId]);
       console.log(`📦 Encontrados ${items.length} items para el pedido`);
 
       // Obtener análisis de IA completo de las nuevas tablas si existe
       let enhancedAiAnalysis = null;
       try {
-        enhancedAiAnalysis = await this.aiPersistenceService.getLatestAnalysis(id);
+        enhancedAiAnalysis = await this.aiPersistenceService.getLatestAnalysis(deobfuscatedId);
         console.log('🤖 Análisis de IA encontrado en nuevas tablas:', enhancedAiAnalysis?.decision);
       } catch (error) {
         console.log('ℹ️ No se encontró análisis en nuevas tablas, usando formato legacy');
@@ -425,7 +442,7 @@ export class MedicalOrdersService {
 
       return this.mapToResponseDto(order, items, true, enhancedAiAnalysis);
     } catch (error) {
-      console.error(`❌ Error obteniendo pedido ${id}:`, error);
+      console.error(`❌ Error obteniendo pedido ${id} (desofuscado: ${deobfuscatedId}):`, error);
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -434,8 +451,26 @@ export class MedicalOrdersService {
   }
 
   async updateMedicalOrder(id: string, updateDto: UpdateMedicalOrderDto, userId: string): Promise<MedicalOrderResponseDto> {
+    let deobfuscatedId: string;
+    
     try {
-      const order = await this.medicalOrderRepository.findOne({ where: { order_id: id } });
+      console.log(`🔄 Actualizando pedido médico: ${id}`);
+      
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid, wasObfuscated } = IdObfuscatorUtil.smartDeobfuscate(id);
+      
+      if (!isValid) {
+        console.error(`❌ ID inválido: ${id}`);
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      if (wasObfuscated) {
+        console.log(`🔓 ID desofuscado: ${id} -> ${realId}`);
+      }
+      
+      deobfuscatedId = realId;
+      
+      const order = await this.medicalOrderRepository.findOne({ where: { order_id: deobfuscatedId } });
       
       if (!order) {
         throw new NotFoundException('Pedido médico no encontrado');
@@ -448,8 +483,9 @@ export class MedicalOrdersService {
       });
 
       await this.medicalOrderRepository.save(order);
-      return this.getMedicalOrderById(id);
+      return this.getMedicalOrderById(id); // Usar el ID original para mantener consistencia
     } catch (error) {
+      console.error(`❌ Error actualizando pedido ${id} (desofuscado: ${deobfuscatedId}):`, error);
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -458,10 +494,26 @@ export class MedicalOrdersService {
   }
 
   async deleteMedicalOrder(id: string, userId?: string): Promise<void> {
+    let deobfuscatedId: string;
+    
     try {
       console.log(`🗑️ Intentando eliminar pedido médico: ${id}`);
       
-      const order = await this.medicalOrderRepository.findOne({ where: { order_id: id } });
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid, wasObfuscated } = IdObfuscatorUtil.smartDeobfuscate(id);
+      
+      if (!isValid) {
+        console.error(`❌ ID inválido: ${id}`);
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      if (wasObfuscated) {
+        console.log(`🔓 ID desofuscado: ${id} -> ${realId}`);
+      }
+      
+      deobfuscatedId = realId;
+      
+      const order = await this.medicalOrderRepository.findOne({ where: { order_id: deobfuscatedId } });
       
       if (!order) {
         console.log(`❌ Pedido no encontrado: ${id}`);
@@ -478,17 +530,17 @@ export class MedicalOrdersService {
 
       console.log('🗑️ Eliminando items del pedido...');
       // Eliminar los items del pedido primero
-      await this.medicalOrderItemRepository.delete({ order_id: id });
+      await this.medicalOrderItemRepository.delete({ order_id: deobfuscatedId });
       
       console.log('🗑️ Eliminando pedido...');
       // Eliminar el pedido
-      await this.medicalOrderRepository.delete({ order_id: id });
+      await this.medicalOrderRepository.delete({ order_id: deobfuscatedId });
       
       console.log('✅ Pedido eliminado exitosamente');
       
       // Intentar registrar evento en el historial (no crítico si falla)
       try {
-        await this.recordHistoryEvent(id, {
+        await this.recordHistoryEvent(deobfuscatedId, {
           action: 'DELETED',
           performedBy: userId || 'system',
           notes: 'Pedido médico eliminado',
@@ -503,7 +555,7 @@ export class MedicalOrdersService {
       }
       
     } catch (error) {
-      console.error(`❌ Error eliminando pedido ${id}:`, error.message);
+      console.error(`❌ Error eliminando pedido ${id} (desofuscado: ${deobfuscatedId}):`, error.message);
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
@@ -512,11 +564,27 @@ export class MedicalOrdersService {
   }
 
   async authorizeMedicalOrder(id: string, authorizeDto: AuthorizeOrderDto, userId: string): Promise<MedicalOrderResponseDto> {
+    let deobfuscatedId: string;
+    
     try {
       console.log(`🔍 Autorizando pedido médico ${id} como ${authorizeDto.decision}`);
       
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid, wasObfuscated } = IdObfuscatorUtil.smartDeobfuscate(id);
+      
+      if (!isValid) {
+        console.error(`❌ ID inválido: ${id}`);
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      if (wasObfuscated) {
+        console.log(`🔓 ID desofuscado: ${id} -> ${realId}`);
+      }
+      
+      deobfuscatedId = realId;
+      
       const order = await this.medicalOrderRepository.findOne({
-        where: { order_id: id }
+        where: { order_id: deobfuscatedId }
       });
 
       if (!order) {
@@ -571,7 +639,7 @@ export class MedicalOrdersService {
       console.log(`✅ Autorización completada`);
       
       // Registrar evento en el historial
-      await this.recordHistoryEvent(id, {
+      await this.recordHistoryEvent(deobfuscatedId, {
         action: decision === 'approved' ? 'AUTHORIZED' : 
                decision === 'rejected' ? 'REJECTED' : 'PARTIALLY_AUTHORIZED',
         performedBy: userId,
@@ -585,9 +653,9 @@ export class MedicalOrdersService {
         }
       });
       
-      return this.getMedicalOrderById(id);
+      return this.getMedicalOrderById(id); // Usar el ID original para mantener consistencia
     } catch (error) {
-      console.error(`❌ Error en authorizeMedicalOrder:`, error);
+      console.error(`❌ Error en authorizeMedicalOrder para ${id} (desofuscado: ${deobfuscatedId}):`, error);
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -597,10 +665,27 @@ export class MedicalOrdersService {
 
   async aiAuthorizeMedicalOrder(id: string): Promise<MedicalOrderResponseDto> {
     const startTime = new Date();
+    let deobfuscatedId: string;
     
     try {
+      console.log(`🤖 Iniciando autorización por IA para pedido: ${id}`);
+      
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid, wasObfuscated } = IdObfuscatorUtil.smartDeobfuscate(id);
+      
+      if (!isValid) {
+        console.error(`❌ ID inválido: ${id}`);
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      if (wasObfuscated) {
+        console.log(`🔓 ID desofuscado: ${id} -> ${realId}`);
+      }
+      
+      deobfuscatedId = realId;
+      
       const order = await this.medicalOrderRepository.findOne({
-        where: { order_id: id }
+        where: { order_id: deobfuscatedId }
       });
 
       if (!order) {
@@ -609,7 +694,7 @@ export class MedicalOrdersService {
 
       // Cargar los items del pedido por separado
       const items = await this.medicalOrderItemRepository.find({
-        where: { order_id: id }
+        where: { order_id: deobfuscatedId }
       });
 
       // Convertir a formato MedicalOrder para el análisis IA
@@ -720,14 +805,14 @@ export class MedicalOrdersService {
 
       // Persistir análisis completo en las nuevas tablas
       const savedAnalysis = await this.aiPersistenceService.saveAnalysis(
-        id,
+        deobfuscatedId,
         orderForAI as any,
         enhancedAnalysis,
         startTime
       );
 
       // Obtener el análisis en formato legacy para compatibilidad
-      const legacyAnalysis = await this.aiPersistenceService.getAnalysisInLegacyFormat(id);
+      const legacyAnalysis = await this.aiPersistenceService.getAnalysisInLegacyFormat(deobfuscatedId);
       
       // Actualizar el pedido principal (mantener compatibilidad con formato legacy)
       order.ai_analysis_result = legacyAnalysis || aiAnalysis;
@@ -781,7 +866,7 @@ export class MedicalOrdersService {
       }
 
       // Registrar evento de análisis IA en el historial
-      await this.recordHistoryEvent(id, {
+      await this.recordHistoryEvent(deobfuscatedId, {
         action: 'AI_ANALYZED',
         performedBy: 'system',
         notes: `Análisis de IA completado: ${aiAnalysis.decision === 'approved' ? 'Aprobado' : 
@@ -799,8 +884,9 @@ export class MedicalOrdersService {
         }
       });
 
-      return this.getMedicalOrderById(id);
+      return this.getMedicalOrderById(id); // Usar el ID original para mantener consistencia
     } catch (error) {
+      console.error(`❌ Error en análisis IA para ${id} (desofuscado: ${deobfuscatedId}):`, error);
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -1192,11 +1278,27 @@ export class MedicalOrdersService {
   }
 
   async correctMedicalOrder(id: string, correctDto: CorrectMedicalOrderDto, userId: string): Promise<MedicalOrderResponseDto> {
+    let deobfuscatedId: string;
+    
     try {
       console.log(`🔧 Corrigiendo pedido médico ${id}`);
       
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid, wasObfuscated } = IdObfuscatorUtil.smartDeobfuscate(id);
+      
+      if (!isValid) {
+        console.error(`❌ ID inválido: ${id}`);
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      if (wasObfuscated) {
+        console.log(`🔓 ID desofuscado: ${id} -> ${realId}`);
+      }
+      
+      deobfuscatedId = realId;
+      
       const order = await this.medicalOrderRepository.findOne({
-        where: { order_id: id }
+        where: { order_id: deobfuscatedId }
       });
 
       if (!order) {
@@ -1248,12 +1350,12 @@ export class MedicalOrdersService {
         console.log(`📦 Procesando correcciones de ${correctDto.itemCorrections.length} items`);
         
         for (const correction of correctDto.itemCorrections) {
-          await this.processItemCorrection(id, correction, userId);
+          await this.processItemCorrection(deobfuscatedId, correction, userId);
         }
       }
 
       // Registrar evento en el historial
-      await this.recordHistoryEvent(id, {
+      await this.recordHistoryEvent(deobfuscatedId, {
         action: 'CORRECTED',
         performedBy: userId,
         notes: `Pedido corregido: ${correctDto.correctionNotes}`,
@@ -1272,7 +1374,7 @@ export class MedicalOrdersService {
       if (correctDto.requestNewAiAnalysis) {
         console.log(`🤖 Ejecutando nuevo análisis de IA automáticamente...`);
         try {
-          await this.aiAuthorizeMedicalOrder(id);
+          await this.aiAuthorizeMedicalOrder(id); // Usar ID original para consistencia
         } catch (aiError) {
           console.error('Error en análisis automático de IA:', aiError);
           // No lanzamos el error para no interrumpir el proceso de corrección
@@ -1280,9 +1382,9 @@ export class MedicalOrdersService {
       }
 
       console.log(`✅ Corrección completada, retornando datos actualizados`);
-      return this.getMedicalOrderById(id);
+      return this.getMedicalOrderById(id); // Usar ID original para mantener consistencia
     } catch (error) {
-      console.error(`❌ Error en correctMedicalOrder:`, error);
+      console.error(`❌ Error en correctMedicalOrder para ${id} (desofuscado: ${deobfuscatedId}):`, error);
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
@@ -1702,16 +1804,34 @@ export class MedicalOrdersService {
    * Refresca y corrige el análisis de IA de un pedido médico
    */
   async refreshAIAnalysis(id: string): Promise<MedicalOrderResponseDto> {
+    let deobfuscatedId: string;
+    
     try {
+      console.log(`🔄 Refrescando análisis de IA para pedido: ${id}`);
+      
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid, wasObfuscated } = IdObfuscatorUtil.smartDeobfuscate(id);
+      
+      if (!isValid) {
+        console.error(`❌ ID inválido: ${id}`);
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      if (wasObfuscated) {
+        console.log(`🔓 ID desofuscado: ${id} -> ${realId}`);
+      }
+      
+      deobfuscatedId = realId;
+      
       // Obtener análisis existente
-      const existingAnalysis = await this.aiPersistenceService.getLatestAnalysis(id);
+      const existingAnalysis = await this.aiPersistenceService.getLatestAnalysis(deobfuscatedId);
       if (!existingAnalysis) {
         throw new BadRequestException('No existe análisis de IA previo para este pedido');
       }
 
       // Obtener el pedido y sus items
       const order = await this.medicalOrderRepository.findOne({
-        where: { order_id: id }
+        where: { order_id: deobfuscatedId }
       });
 
       if (!order) {
@@ -1719,7 +1839,7 @@ export class MedicalOrdersService {
       }
 
       const items = await this.medicalOrderItemRepository.find({
-        where: { order_id: id }
+        where: { order_id: deobfuscatedId }
       });
 
       // Crear análisis corregido basado en el análisis general
@@ -1761,12 +1881,12 @@ export class MedicalOrdersService {
       }
 
       // Actualizar el análisis legacy en el pedido
-      const legacyAnalysis = await this.aiPersistenceService.getAnalysisInLegacyFormat(id);
+      const legacyAnalysis = await this.aiPersistenceService.getAnalysisInLegacyFormat(deobfuscatedId);
       order.ai_analysis_result = legacyAnalysis;
       await this.medicalOrderRepository.save(order);
 
       // Registrar evento de corrección
-      await this.recordHistoryEvent(id, {
+      await this.recordHistoryEvent(deobfuscatedId, {
         action: 'AI_ANALYSIS_REFRESHED',
         performedBy: 'system',
         notes: 'Análisis de IA refrescado y corregido para sincronizar decisiones de items con análisis general',
@@ -1776,8 +1896,9 @@ export class MedicalOrdersService {
         }
       });
 
-      return this.getMedicalOrderById(id);
+      return this.getMedicalOrderById(id); // Usar ID original para mantener consistencia
     } catch (error) {
+      console.error(`❌ Error refrescando análisis IA para ${id} (desofuscado: ${deobfuscatedId}):`, error);
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
@@ -2008,7 +2129,14 @@ export class MedicalOrdersService {
   // Métodos para análisis de IA detallado
   async getAiAnalysis(orderId: string): Promise<any> {
     try {
-      const analysis = await this.aiPersistenceService.getLatestAnalysis(orderId);
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid } = IdObfuscatorUtil.smartDeobfuscate(orderId);
+      
+      if (!isValid) {
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      const analysis = await this.aiPersistenceService.getLatestAnalysis(realId);
       if (!analysis) {
         throw new NotFoundException('No se encontró análisis de IA para este pedido');
       }
@@ -2023,7 +2151,14 @@ export class MedicalOrdersService {
 
   async getAiAnalysisHistory(orderId: string): Promise<any[]> {
     try {
-      return await this.aiPersistenceService.getAnalysisHistory(orderId);
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid } = IdObfuscatorUtil.smartDeobfuscate(orderId);
+      
+      if (!isValid) {
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      return await this.aiPersistenceService.getAnalysisHistory(realId);
     } catch (error) {
       throw new BadRequestException(`Error al obtener historial de análisis de IA: ${error.message}`);
     }
@@ -2031,7 +2166,14 @@ export class MedicalOrdersService {
 
   async getItemAiAnalysis(orderId: string, itemId: string): Promise<any> {
     try {
-      const analysis = await this.aiPersistenceService.getLatestAnalysis(orderId);
+      // Desofuscar el ID si es necesario
+      const { id: realId, isValid } = IdObfuscatorUtil.smartDeobfuscate(orderId);
+      
+      if (!isValid) {
+        throw new NotFoundException('ID de pedido médico inválido');
+      }
+      
+      const analysis = await this.aiPersistenceService.getLatestAnalysis(realId);
       if (!analysis) {
         throw new NotFoundException('No se encontró análisis de IA para este pedido');
       }

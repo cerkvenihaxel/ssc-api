@@ -26,6 +26,12 @@ export class EffectorRequestEntity {
   @Column({ type: 'enum', enum: ['BAJA', 'NORMAL', 'ALTA', 'URGENTE'], default: 'NORMAL' })
   priority: string;
 
+  @Column({ type: 'boolean', default: false })
+  available_for_quotation: boolean;
+
+  @Column({ type: 'jsonb', nullable: true })
+  specialties: string[];
+
   @Column({ type: 'date', nullable: true })
   delivery_date: Date;
 

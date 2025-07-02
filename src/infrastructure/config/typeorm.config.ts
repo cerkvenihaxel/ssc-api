@@ -20,6 +20,7 @@ import { AiItemAnalysis } from '../../entities/ai-item-analysis.entity';
 import { AiRiskFactor } from '../../entities/ai-risk-factor.entity';
 import { AiRecommendation } from '../../entities/ai-recommendation.entity';
 import { AiCorrectionSuggestion } from '../../entities/ai-correction-suggestion.entity';
+import { QuotationAuditEntity, QuotationAuditRecommendationEntity, QuotationAuditRiskFactorEntity } from '../../entities/quotation-audit.entity';
 // Effector Request entities
 import { EffectorRequestEntity } from '../entities/effector-request.entity';
 import { EffectorRequestItemEntity } from '../entities/effector-request-item.entity';
@@ -59,6 +60,10 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     AiRiskFactor,
     AiRecommendation,
     AiCorrectionSuggestion,
+    // Quotation Audit entities
+    QuotationAuditEntity,
+    QuotationAuditRecommendationEntity,
+    QuotationAuditRiskFactorEntity,
     // Effector Request entities
     EffectorRequestEntity,
     EffectorRequestItemEntity,

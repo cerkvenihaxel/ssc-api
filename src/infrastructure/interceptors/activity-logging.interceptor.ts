@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { ActivityLogService } from '../../application/services/activity/activity-log.service';
 import { Reflector } from '@nestjs/core';
+import { IdObfuscatorUtil } from '../../shared/utils/id-obfuscator.util';
 
 export const SKIP_ACTIVITY_LOG = 'skipActivityLog';
 export const SkipActivityLog = () => Reflector.createDecorator<boolean>();
@@ -154,7 +155,7 @@ export class ActivityLoggingInterceptor implements NestInterceptor {
         userId: user?.userId || user?.user_id || null,
         action,
         entityType,
-        entityId,
+        entityId: this.sanitizeEntityId(entityId),
         oldValues,
         newValues: {
           ...newValues,
@@ -204,9 +205,16 @@ export class ActivityLoggingInterceptor implements NestInterceptor {
         }
       }
 
-      // If creating new entity, try to get ID from response or generate temporary
-      if (!entityId && method === 'POST' && body) {
-        entityId = body.id || body.uuid || 'new_entity';
+      // If creating new entity, try to get ID from response data
+      if (!entityId && method === 'POST') {
+        // For POST requests, we'll let entityId be null initially
+        // and try to extract it from response data if available
+        if (body?.id && this.isValidId(body.id)) {
+          entityId = body.id;
+        } else if (body?.uuid && this.isValidId(body.uuid)) {
+          entityId = body.uuid;
+        }
+        // Don't use 'new_entity' string as it's not a valid UUID
       }
     }
 
@@ -234,12 +242,18 @@ export class ActivityLoggingInterceptor implements NestInterceptor {
   }
 
   private isValidId(value: string): boolean {
+    if (!value || typeof value !== 'string') {
+      return false;
+    }
+
     // Check for UUID pattern
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     // Check for numeric ID
     const numericPattern = /^\d+$/;
+    // Check for obfuscated ID pattern (starts with U2FsdGVk and contains base64-like characters)
+    const obfuscatedPattern = /^U2FsdGVk[A-Za-z0-9+/=_-]+$/;
     
-    return uuidPattern.test(value) || numericPattern.test(value);
+    return uuidPattern.test(value) || numericPattern.test(value) || obfuscatedPattern.test(value);
   }
 
   private sanitizeData(data: any): any {
@@ -280,5 +294,44 @@ export class ActivityLoggingInterceptor implements NestInterceptor {
       request.ip ||
       'unknown'
     );
+  }
+
+  /**
+   * Sanitiza el entityId para asegurar que sea un UUID válido antes de guardarlo en la DB
+   */
+  private sanitizeEntityId(entityId: string | null): string | null {
+    if (!entityId) {
+      return null;
+    }
+
+    try {
+      // Si es un ID ofuscado, desofuscarlo primero
+      if (entityId.startsWith('U2FsdGVk')) {
+        const { id: deobfuscatedId, isValid } = IdObfuscatorUtil.smartDeobfuscate(entityId);
+        if (isValid && this.isUuid(deobfuscatedId)) {
+          return deobfuscatedId;
+        }
+        return null; // Si no se puede desofuscar a un UUID válido, retornar null
+      }
+
+      // Si ya es un UUID válido, retornarlo
+      if (this.isUuid(entityId)) {
+        return entityId;
+      }
+
+      // Si es otro tipo de ID válido pero no UUID, retornar null para evitar errores de DB
+      return null;
+    } catch (error) {
+      this.logger.warn(`Error sanitizing entityId "${entityId}": ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Valida si un string es un UUID válido
+   */
+  private isUuid(value: string): boolean {
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidPattern.test(value);
   }
 } 

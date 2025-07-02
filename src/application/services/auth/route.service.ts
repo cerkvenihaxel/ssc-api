@@ -213,18 +213,48 @@ export class RouteService {
         ]
       },
       {
+        path: '/admin/provider-services',
+        title: 'Servicios Proveedores',
+        icon: 'BriefcaseIcon',
+        description: 'Administrar servicios de proveedores',
+        order: 7,
+        children: [
+          {
+            path: '/provider-services/available-requests',
+            title: 'Solicitudes Disponibles',
+            icon: 'SearchIcon',
+            description: 'Ver todas las solicitudes disponibles',
+            order: 1
+          },
+          {
+            path: '/provider-services/my-quotations',
+            title: 'Todas las Cotizaciones',
+            icon: 'CalculatorIcon',
+            description: 'Gestionar todas las cotizaciones',
+            order: 2
+          },
+          {
+            path: '/provider-services/audited-quotations',
+            title: 'Cotizaciones Auditadas',
+            icon: 'CheckCircleIcon',
+            description: 'Ver resultados de auditorías',
+            order: 3
+          }
+        ]
+      },
+      {
         path: '/admin/analytics',
         title: 'Reportes y Analytics',
         icon: 'AnalyticsIcon',
         description: 'Estadísticas del sistema',
-        order: 7
+        order: 8
       },
       {
         path: '/admin/settings',
         title: 'Configuración',
         icon: 'SettingsIcon',
         description: 'Configuración del sistema',
-        order: 8
+        order: 9
       }
     ];
   }
@@ -312,39 +342,69 @@ export class RouteService {
   private getProveedorRoutes(): RouteInfo[] {
     return [
       {
+        path: '/provider-services',
+        title: 'Servicios Proveedores',
+        icon: 'BriefcaseIcon',
+        description: 'Módulo completo de servicios para proveedores',
+        order: 1,
+        children: [
+          {
+            path: '/provider-services/available-requests',
+            title: 'Solicitudes a Cotizar',
+            icon: 'SearchIcon',
+            description: 'Pedidos disponibles para cotización',
+            order: 1
+          },
+          {
+            path: '/provider-services/my-quotations',
+            title: 'Mis Cotizaciones',
+            icon: 'CalculatorIcon',
+            description: 'Gestionar mis cotizaciones enviadas',
+            order: 2
+          },
+          {
+            path: '/provider-services/audited-quotations',
+            title: 'Cotizaciones Auditadas',
+            icon: 'CheckCircleIcon',
+            description: 'Solicitudes procesadas por auditores',
+            order: 3
+          }
+        ]
+      },
+      {
         path: '/proveedor/quotations',
-        title: 'Cotizaciones',
+        title: 'Cotizaciones (Legacy)',
         icon: 'QuoteIcon',
-        description: 'Gestionar cotizaciones',
-        order: 1
+        description: 'Gestionar cotizaciones (versión anterior)',
+        order: 2
       },
       {
         path: '/proveedor/requests',
-        title: 'Pedidos Disponibles',
+        title: 'Pedidos Disponibles (Legacy)',
         icon: 'RequestsIcon',
-        description: 'Pedidos para cotizar',
-        order: 2
+        description: 'Pedidos para cotizar (versión anterior)',
+        order: 3
       },
       {
         path: '/proveedor/orders',
         title: 'Órdenes Recibidas',
         icon: 'OrderIcon',
         description: 'Órdenes adjudicadas',
-        order: 3
+        order: 4
       },
       {
         path: '/proveedor/catalog',
         title: 'Mi Catálogo',
         icon: 'CatalogIcon',
         description: 'Gestionar artículos',
-        order: 4
+        order: 5
       },
       {
         path: '/proveedor/profile',
         title: 'Mi Perfil',
         icon: 'ProfileIcon',
         description: 'Información del proveedor',
-        order: 5
+        order: 6
       }
     ];
   }
