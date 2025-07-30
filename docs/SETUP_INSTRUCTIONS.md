@@ -56,10 +56,10 @@ docker-compose up -d postgres
 # docker run --name ssc-postgres -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -e POSTGRES_DB=ssc_db -p 5432:5432 -d postgres:15
 
 # 2. Ejecutar script SQL
-psql -h localhost -U admin -d ssc_db -f script.sql
+psql -h localhost -p 5433 -U admin -d ssc_db -f script.sql
 
 # 3. Verificar tablas creadas
-psql -h localhost -U admin -d ssc_db -c "\dt"
+psql -h localhost -p 5433 -U admin -d ssc_db -c "\dt"
 ```
 
 #### **Opción B: PostgreSQL Local**

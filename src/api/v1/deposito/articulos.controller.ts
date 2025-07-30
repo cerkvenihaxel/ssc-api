@@ -18,13 +18,13 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
 import { ArticuloService } from '../../../application/services/deposito/articulo.service';
 import { CreateArticuloDto } from '../../dtos/deposito/create-articulo.dto';
 import { UpdateArticuloDto } from '../../dtos/deposito/update-articulo.dto';
-import { Articulo } from '../../../domain/entities/articulo.entity';
+import { Articulo } from '../../../domain/entities/articulo.entity'; // This line is already present
+import { FindAllArticulosQueryDto } from '../../../../find-all-articulos-query.dto';
 
 @ApiTags('Depósito - Artículos')
 @Controller('v1/deposito/articulos')
@@ -39,7 +39,7 @@ export class ArticulosController {
   @ApiResponse({
     status: 201,
     description: 'Artículo creado exitosamente',
-    type: Object,
+    type: Articulo,
   })
   @ApiResponse({
     status: 400,
@@ -49,52 +49,80 @@ export class ArticulosController {
     status: 409,
     description: 'Ya existe un artículo con el código proporcionado',
   })
-  async createArticulo(@Body() createArticuloDto: CreateArticuloDto): Promise<Articulo> {
+  async createArticulo(
+    @Body() createArticuloDto: CreateArticuloDto,
+  ): Promise<Articulo> {
     return this.articuloService.createArticulo(createArticuloDto);
   }
 
+  @Get('search/:term')
+  @ApiOperation({ summary: 'Buscar artículos por término' })
+  @ApiParam({ name: 'term', description: 'Término de búsqueda' })
+  @ApiResponse({
+    status: 200,
+    description: 'Resultados de búsqueda obtenidos exitosamente',
+    type: [Articulo],
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Término de búsqueda inválido',
+  })
+  async searchArticulos(@Param('term') term: string): Promise<Articulo[]> {
+    return this.articuloService.searchArticulos(term);
+  }
+
+  @Get('proveedor/:providerId')
+  @ApiOperation({ summary: 'Obtener artículos por proveedor' })
+  @ApiParam({ name: 'providerId', description: 'ID del proveedor' })
+  @ApiResponse({
+    status: 200,
+    description: 'Artículos del proveedor obtenidos exitosamente',
+    type: [Articulo],
+  })
+  async findArticulosByProveedor(
+    @Param('providerId', ParseUUIDPipe) providerId: string,
+  ): Promise<Articulo[]> {
+    return this.articuloService.findAllArticulos({ providerId });
+  }
+
+  @Get('stock/disponible')
+  @ApiOperation({ summary: 'Obtener artículos en stock' })
+  @ApiResponse({
+    status: 200,
+    description: 'Artículos en stock obtenidos exitosamente',
+    type: [Articulo],
+  })
+  async findArticulosInStock(): Promise<Articulo[]> {
+    return this.articuloService.findAllArticulos({ inStock: true });
+  }
+
+  @Get('stock/agotado')
+  @ApiOperation({ summary: 'Obtener artículos sin stock' })
+  @ApiResponse({
+    status: 200,
+    description: 'Artículos sin stock obtenidos exitosamente',
+    type: [Articulo],
+  })
+  async findArticulosOutOfStock(): Promise<Articulo[]> {
+    return this.articuloService.findAllArticulos({ inStock: false });
+  }
+
   @Get()
-  @ApiOperation({ summary: 'Obtener todos los artículos con filtros opcionales' })
-  @ApiQuery({ name: 'providerId', required: false, description: 'ID del proveedor' })
-  @ApiQuery({ name: 'grupoId', required: false, description: 'ID del grupo' })
-  @ApiQuery({ name: 'inStock', required: false, type: Boolean, description: 'Filtrar por artículos en stock' })
-  @ApiQuery({ name: 'minPrice', required: false, type: Number, description: 'Precio mínimo' })
-  @ApiQuery({ name: 'maxPrice', required: false, type: Number, description: 'Precio máximo' })
-  @ApiQuery({ name: 'searchTerm', required: false, description: 'Término de búsqueda' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Límite de resultados' })
-  @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Offset para paginación' })
+  @ApiOperation({
+    summary: 'Obtener todos los artículos con filtros opcionales',
+  })
   @ApiResponse({
     status: 200,
     description: 'Lista de artículos obtenida exitosamente',
-    type: [Object],
+    type: [Articulo],
   })
   async findAllArticulos(
-    @Query('providerId') providerId?: string,
-    @Query('grupoId') grupoId?: string,
-    @Query('inStock') inStock?: boolean,
-    @Query('minPrice') minPrice?: number,
-    @Query('maxPrice') maxPrice?: number,
-    @Query('searchTerm') searchTerm?: string,
-    @Query('limit') limit?: number,
-    @Query('offset') offset?: number,
+    @Query() filters: FindAllArticulosQueryDto,
   ): Promise<Articulo[]> {
-    const filters = {
-      providerId,
-      grupoId,
-      inStock,
-      minPrice,
-      maxPrice,
-      searchTerm,
-      limit,
-      offset,
-    };
-
-    // Remover propiedades undefined
-    Object.keys(filters).forEach(key => 
-      filters[key] === undefined && delete filters[key]
+    const articulos = await this.articuloService.findAllArticulos(
+      Object.keys(filters).length > 0 ? filters : undefined,
     );
-
-    return this.articuloService.findAllArticulos(Object.keys(filters).length > 0 ? filters : undefined);
+    return articulos;
   }
 
   @Get(':id')
@@ -103,13 +131,15 @@ export class ArticulosController {
   @ApiResponse({
     status: 200,
     description: 'Artículo encontrado',
-    type: Object,
+    type: Articulo,
   })
   @ApiResponse({
     status: 404,
     description: 'Artículo no encontrado',
   })
-  async findArticuloById(@Param('id', ParseUUIDPipe) id: string): Promise<Articulo> {
+  async findArticuloById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<Articulo> {
     return this.articuloService.findArticuloById(id);
   }
 
@@ -120,7 +150,7 @@ export class ArticulosController {
   @ApiResponse({
     status: 200,
     description: 'Artículo actualizado exitosamente',
-    type: Object,
+    type: Articulo,
   })
   @ApiResponse({
     status: 404,
@@ -152,54 +182,4 @@ export class ArticulosController {
   async deleteArticulo(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.articuloService.deleteArticulo(id);
   }
-
-  @Get('search/:term')
-  @ApiOperation({ summary: 'Buscar artículos por término' })
-  @ApiParam({ name: 'term', description: 'Término de búsqueda' })
-  @ApiResponse({
-    status: 200,
-    description: 'Resultados de búsqueda obtenidos exitosamente',
-    type: [Object],
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Término de búsqueda inválido',
-  })
-  async searchArticulos(@Param('term') term: string): Promise<Articulo[]> {
-    return this.articuloService.searchArticulos(term);
-  }
-
-  @Get('proveedor/:providerId')
-  @ApiOperation({ summary: 'Obtener artículos por proveedor' })
-  @ApiParam({ name: 'providerId', description: 'ID del proveedor' })
-  @ApiResponse({
-    status: 200,
-    description: 'Artículos del proveedor obtenidos exitosamente',
-    type: [Object],
-  })
-  async findArticulosByProveedor(@Param('providerId', ParseUUIDPipe) providerId: string): Promise<Articulo[]> {
-    return this.articuloService.findAllArticulos({ providerId });
-  }
-
-  @Get('stock/disponible')
-  @ApiOperation({ summary: 'Obtener artículos en stock' })
-  @ApiResponse({
-    status: 200,
-    description: 'Artículos en stock obtenidos exitosamente',
-    type: [Object],
-  })
-  async findArticulosInStock(): Promise<Articulo[]> {
-    return this.articuloService.findAllArticulos({ inStock: true });
-  }
-
-  @Get('stock/agotado')
-  @ApiOperation({ summary: 'Obtener artículos sin stock' })
-  @ApiResponse({
-    status: 200,
-    description: 'Artículos sin stock obtenidos exitosamente',
-    type: [Object],
-  })
-  async findArticulosOutOfStock(): Promise<Articulo[]> {
-    return this.articuloService.findAllArticulos({ inStock: false });
-  }
-} 
+}

@@ -30,12 +30,14 @@ import { EffectorRequestStateEntity } from '../entities/effector-request-state.e
 import { ActivityLogEntity } from '../entities/activity-log.entity';
 import { join } from 'path';
 
+
+
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT, 10) || 5432,
-  username: process.env.DB_USER || 'admin',
-  password: process.env.DB_PASSWORD || 'admin',
+  username: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'A22f04gc*',
   database: process.env.DB_NAME || 'ssc_db',
   entities: [
     Address, 
