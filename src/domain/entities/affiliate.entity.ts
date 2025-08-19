@@ -1,10 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Address } from './address.entity';
 
 @Entity('afiliados')
 export class Affiliate {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryColumn({ name: 'affiliate_id', type: 'uuid' })
+  affiliate_id: string;
 
   @Column({ name: 'affiliate_number', unique: true })
   affiliateNumber: string;

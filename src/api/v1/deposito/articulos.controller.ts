@@ -119,9 +119,12 @@ export class ArticulosController {
   async findAllArticulos(
     @Query() filters: FindAllArticulosQueryDto,
   ): Promise<Articulo[]> {
+    console.log('Buscando artículos con filtros:', filters);
+
     const articulos = await this.articuloService.findAllArticulos(
       Object.keys(filters).length > 0 ? filters : undefined,
     );
+    console.log('Artículos encontrados:', articulos);
     return articulos;
   }
 

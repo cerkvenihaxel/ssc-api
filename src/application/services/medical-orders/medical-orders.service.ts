@@ -608,16 +608,23 @@ export class MedicalOrdersService {
 
       if (decision === 'rejected') {
         order.state_id = 5;
+        // Los pedidos rechazados no están disponibles para cotización
+        order.available_for_quotation = false;
       } else if (decision === 'approved') {
         order.state_id = 4;
+        // Los pedidos aprobados están disponibles para cotización
+        order.available_for_quotation = true;
       } else {
         order.state_id = 6;
+        // Los pedidos parcialmente autorizados no están disponibles para cotización
+        order.available_for_quotation = false;
       }
 
       console.log(`💾 Guardando cambios:`, {
         authorization_status: order.authorization_status,
         state_id: order.state_id,
-        authorized_by: order.authorized_by
+        authorized_by: order.authorized_by,
+        available_for_quotation: order.available_for_quotation
       });
 
       await this.medicalOrderRepository.save(order);
@@ -824,15 +831,23 @@ export class MedicalOrdersService {
       if (aiAnalysis.decision === 'approved') {
         order.state_id = 4; // Aprobado
         order.authorization_status = 'approved';
+        // Los pedidos aprobados por IA están disponibles para cotización
+        order.available_for_quotation = true;
       } else if (aiAnalysis.decision === 'rejected') {
         order.state_id = 5; // Rechazado
         order.authorization_status = 'rejected';
+        // Los pedidos rechazados por IA no están disponibles para cotización
+        order.available_for_quotation = false;
       } else if (aiAnalysis.decision === 'requires_review') {
         order.state_id = 3; // En Revisión
         order.authorization_status = 'pending';
+        // Los pedidos que requieren revisión no están disponibles para cotización
+        order.available_for_quotation = false;
       } else {
         order.state_id = 6; // Parcialmente Aprobado
         order.authorization_status = 'partial';
+        // Los pedidos parcialmente aprobados no están disponibles para cotización
+        order.available_for_quotation = false;
       }
 
       await this.medicalOrderRepository.save(order);

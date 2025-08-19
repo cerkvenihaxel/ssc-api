@@ -43,13 +43,19 @@ export class ProviderQuotationsService {
     const { specialty, type = 'all', priority, page = 1, limit = 10 } = filters;
     const offset = (page - 1) * limit;
 
+    console.log('[ProviderQuotationsService] Iniciando búsqueda de solicitudes disponibles:', {
+      userId,
+      userRole,
+      filters: { specialty, type, priority, page, limit }
+    });
+
     // Obtener las especialidades del proveedor (Administradores pueden ver todas)
     let providerSpecialties: string[] = [];
     let isAdmin = false;
     
     if (userRole === 'ADMIN' || userRole === 'Administrador') {
       isAdmin = true;
-      // Los administradores pueden ver todas las especialidades
+      console.log('[ProviderQuotationsService] Usuario es administrador - puede ver todas las especialidades');
     } else if (userRole === 'PROVEEDOR' || userRole === 'Proveedor') {
       const provider = await this.providerRepository.findOne({
         where: { userId },
@@ -58,6 +64,9 @@ export class ProviderQuotationsService {
       
       if (provider?.especialidades) {
         providerSpecialties = provider.especialidades.map(esp => esp.especialidadId);
+        console.log('[ProviderQuotationsService] Especialidades del proveedor:', providerSpecialties);
+      } else {
+        console.log('[ProviderQuotationsService] Proveedor no encontrado o sin especialidades');
       }
     }
 
@@ -65,6 +74,8 @@ export class ProviderQuotationsService {
 
     // Obtener pedidos médicos disponibles
     if (type === 'all' || type === 'medical') {
+      console.log('[ProviderQuotationsService] Buscando pedidos médicos...');
+      
       const medicalOrdersQuery = this.medicalOrderRepository.createQueryBuilder('mo')
         .where('mo.available_for_quotation = :available', { available: true })
         .andWhere('mo.authorization_status = :status', { status: 'approved' });
@@ -75,6 +86,9 @@ export class ProviderQuotationsService {
           'mo.specialties IS NOT NULL AND mo.specialties ?| array[:specialties]',
           { specialties: providerSpecialties }
         );
+        console.log('[ProviderQuotationsService] Aplicando filtro de especialidades para proveedor');
+      } else if (!isAdmin) {
+        console.log('[ProviderQuotationsService] Proveedor sin especialidades - no se aplican filtros de especialidad');
       }
 
       // Verificar que el proveedor no haya cotizado ya (solo para proveedores)
@@ -88,6 +102,7 @@ export class ProviderQuotationsService {
             )
           )
         `, { userId });
+        console.log('[ProviderQuotationsService] Aplicando filtro para excluir pedidos ya cotizados por el proveedor');
       }
 
       if (specialty) {
@@ -95,12 +110,19 @@ export class ProviderQuotationsService {
           'mo.specialties @> :specialtyArray',
           { specialtyArray: JSON.stringify([specialty]) }
         );
+        console.log('[ProviderQuotationsService] Aplicando filtro de especialidad específica:', specialty);
       }
+
+      // Log de la consulta SQL
+      const medicalOrdersSql = medicalOrdersQuery.getSql();
+      console.log('[ProviderQuotationsService] SQL para pedidos médicos:', medicalOrdersSql);
 
       const medicalOrders = await medicalOrdersQuery
         .limit(limit)
         .offset(offset)
         .getMany();
+
+      console.log('[ProviderQuotationsService] Pedidos médicos encontrados:', medicalOrders.length);
 
       const medicalOrdersFormatted = medicalOrders.map(order => ({
         request_id: order.order_id,
@@ -119,6 +141,8 @@ export class ProviderQuotationsService {
 
     // Obtener pedidos de efectores disponibles
     if (type === 'all' || type === 'effector') {
+      console.log('[ProviderQuotationsService] Buscando pedidos de efectores...');
+      
       const effectorRequestsQuery = this.effectorRequestRepository.createQueryBuilder('er')
         .where('er.available_for_quotation = :available', { available: true })
         .innerJoin('effector_request_states', 'ers', 'ers.state_id = er.state_id')
@@ -130,6 +154,7 @@ export class ProviderQuotationsService {
           'er.specialties IS NOT NULL AND er.specialties ?| array[:specialties]',
           { specialties: providerSpecialties }
         );
+        console.log('[ProviderQuotationsService] Aplicando filtro de especialidades para proveedor (efectores)');
       }
 
       // Verificar que el proveedor no haya cotizado ya (solo para proveedores)
@@ -143,6 +168,7 @@ export class ProviderQuotationsService {
             )
           )
         `, { userId });
+        console.log('[ProviderQuotationsService] Aplicando filtro para excluir pedidos ya cotizados por el proveedor (efectores)');
       }
 
       if (specialty) {
@@ -150,16 +176,24 @@ export class ProviderQuotationsService {
           'er.specialties @> :specialtyArray',
           { specialtyArray: JSON.stringify([specialty]) }
         );
+        console.log('[ProviderQuotationsService] Aplicando filtro de especialidad específica (efectores):', specialty);
       }
 
       if (priority) {
         effectorRequestsQuery.andWhere('er.priority = :priority', { priority });
+        console.log('[ProviderQuotationsService] Aplicando filtro de prioridad (efectores):', priority);
       }
+
+      // Log de la consulta SQL
+      const effectorRequestsSql = effectorRequestsQuery.getSql();
+      console.log('[ProviderQuotationsService] SQL para pedidos de efectores:', effectorRequestsSql);
 
       const effectorRequests = await effectorRequestsQuery
         .limit(limit)
         .offset(offset)
         .getMany();
+
+      console.log('[ProviderQuotationsService] Pedidos de efectores encontrados:', effectorRequests.length);
 
       const effectorRequestsFormatted = effectorRequests.map(request => ({
         request_id: request.request_id,
@@ -179,6 +213,8 @@ export class ProviderQuotationsService {
 
     // Ordenar por fecha de creación (más recientes primero)
     results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    console.log('[ProviderQuotationsService] Total de resultados encontrados:', results.length);
 
     return {
       data: results.slice(0, limit),
@@ -424,13 +460,13 @@ export class ProviderQuotationsService {
     await pool.query(`
       INSERT INTO provider_quotations (
         quotation_id, request_id, provider_id, quotation_number,
-        state_id, total_amount, delivery_time_days, delivery_terms,
+        state_id, status, total_amount, delivery_time_days, delivery_terms,
         payment_terms, warranty_terms, observations, valid_until,
-        created_by
+        available_for_audit, created_by
       ) VALUES (
         $1, $2, $3, $4, 
         (SELECT state_id FROM quotation_states WHERE state_name = 'ENVIADA'),
-        $5, $6, $7, $8, $9, $10, $11, $12
+        'sent', $5, $6, $7, $8, $9, $10, $11, $12, $13
       )
     `, [
       quotationId,
@@ -444,6 +480,7 @@ export class ProviderQuotationsService {
       createDto.warranty_terms,
       createDto.observations,
       createDto.valid_until,
+      true, // available_for_audit = true cuando se crea la cotización
       userId
     ]);
 
