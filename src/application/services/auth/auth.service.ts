@@ -7,7 +7,7 @@ import { MagicLink } from '../../../domain/models/magiclink/magic-link.model';
 import { User } from '../../../domain/models/user/user.model';
 import { UserSession, ClientInfo } from '../../../domain/models/session/user-session.model';
 import { ConfigService } from '@nestjs/config';
-import { MailerService } from '@nestjs-modules/mailer';
+import { Resend } from 'resend';
 import { v4 as uuidv4 } from 'uuid';
 import { RouteService } from './route.service';
 import { FingerprintUtil } from '../../../shared/utils/fingerprint.util';
@@ -26,13 +26,16 @@ export class AuthService {
     private readonly sessionRepository: IUserSessionRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly mailerService: MailerService,
+  private readonly resend: Resend,
     private readonly routeService: RouteService,
   ) {
     // Limpiar sesiones expiradas cada hora
     setInterval(() => {
       this.cleanupExpiredSessions();
     }, 60 * 60 * 1000);
+
+    // Inicializar Resend con la API key del .env
+    this.resend = new Resend(this.configService.get('RESEND_API_KEY'));
   }
 
   async sendMagicLink(email: string, clientInfo?: any): Promise<{ message: string }> {
@@ -77,18 +80,13 @@ export class AuthService {
 
       const magicLinkUrl = `${this.configService.get('FRONTEND_URL')}/auth/verify?token=${magicLink.token}`;
 
-      // Intentar enviar email, pero no fallar si no hay configuración
+      // Enviar email usando Resend
       try {
-        await this.mailerService.sendMail({
+        await this.resend.emails.send({
+          from: 'no-reply@ssc.com',
           to: email,
           subject: 'Acceso al Sistema - SSC',
-          template: 'magic-link',
-          context: {
-            nombre: user.nombre,
-            loginUrl: magicLinkUrl,
-            expirationMinutes: 15,
-            currentYear: new Date().getFullYear(),
-          },
+          html: `<p>Hola ${user.nombre},<br>Accede con este <a href="${magicLinkUrl}">enlace</a>. Válido por 15 minutos.</p>`
         });
         this.logger.log(`Magic link enviado a ${email}`);
       } catch (emailError) {
