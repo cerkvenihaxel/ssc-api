@@ -4,12 +4,12 @@ import { RouteInfo } from '../../../api/v1/auth/dtos/user-info.dto';
 @Injectable()
 export class RouteService {
   
-  getRoutesByRole(roleName: string): { defaultRoute: string; routes: RouteInfo[] } {
+  getRoutesByRole(roleName: string, userPermissions?: string[]): { defaultRoute: string; routes: RouteInfo[] } {
     switch (roleName) {
       case 'Administrador':
         return {
           defaultRoute: '/admin/dashboard',
-          routes: this.getAdminRoutes()
+          routes: this.getAdminRoutes(userPermissions)
         };
       
       case 'Auditor':
@@ -50,8 +50,8 @@ export class RouteService {
     }
   }
 
-  private getAdminRoutes(): RouteInfo[] {
-    return [
+  private getAdminRoutes(userPermissions?: string[]): RouteInfo[] {
+    const allRoutes = [
       {
         path: '/admin/dashboard',
         title: 'Dashboard',
@@ -243,20 +243,41 @@ export class RouteService {
         ]
       },
       {
+        path: '/admin/ocr-reader',
+        title: 'OCR Reader',
+        icon: 'ScanIcon',
+        description: 'Procesamiento OCR de documentos médicos',
+        order: 8
+      },
+      {
         path: '/admin/analytics',
         title: 'Reportes y Analytics',
         icon: 'AnalyticsIcon',
         description: 'Estadísticas del sistema',
-        order: 8
+        order: 9
       },
       {
         path: '/admin/settings',
         title: 'Configuración',
         icon: 'SettingsIcon',
         description: 'Configuración del sistema',
-        order: 9
+        order: 10
       }
     ];
+
+    // Filter routes based on user permissions
+    if (userPermissions && userPermissions.length > 0) {
+      return allRoutes.filter(route => {
+        // OCR Reader requires USE_OCR_READER permission
+        if (route.path === '/admin/ocr-reader') {
+          return userPermissions.includes('USE_OCR_READER');
+        }
+        // All other routes are allowed by default for admin
+        return true;
+      });
+    }
+
+    return allRoutes;
   }
 
   private getAuditorRoutes(): RouteInfo[] {

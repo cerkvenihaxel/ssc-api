@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  Inject,
+} from '@nestjs/common';
 import { IAfiliadoRepository } from '../../../domain/repositories/afiliado/afiliado.repository';
 import { Afiliado } from '../../../domain/models/afiliado/afiliado.model';
 import { CreateAfiliadoDto } from '../../../api/v1/afiliados/dtos/create-afiliado.dto';
@@ -12,7 +17,7 @@ const SYSTEM_UUID = '00000000-0000-0000-0000-000000000000';
 export class AfiliadoService {
   constructor(
     @Inject('IAfiliadoRepository')
-    private readonly afiliadoRepository: IAfiliadoRepository
+    private readonly afiliadoRepository: IAfiliadoRepository,
   ) {}
 
   async findAll(): Promise<Afiliado[]> {
@@ -22,7 +27,9 @@ export class AfiliadoService {
   async findById(affiliateId: string): Promise<Afiliado> {
     const afiliado = await this.afiliadoRepository.findById(affiliateId);
     if (!afiliado) {
-      throw new NotFoundException(`Afiliado con ID ${affiliateId} no encontrado`);
+      throw new NotFoundException(
+        `Afiliado con ID ${affiliateId} no encontrado`,
+      );
     }
     return afiliado;
   }
@@ -31,28 +38,36 @@ export class AfiliadoService {
     // Verificar si ya existe un afiliado con el mismo email
     const existingEmail = await this.afiliadoRepository.findByEmail(dto.email);
     if (existingEmail) {
-      throw new ConflictException(`Ya existe un afiliado con el email ${dto.email}`);
+      throw new ConflictException(
+        `Ya existe un afiliado con el email ${dto.email}`,
+      );
     }
 
     // Verificar si ya existe un afiliado con el mismo CUIL
     const existingCuil = await this.afiliadoRepository.findByCuil(dto.cuil);
     if (existingCuil) {
-      throw new ConflictException(`Ya existe un afiliado con el CUIL ${dto.cuil}`);
+      throw new ConflictException(
+        `Ya existe un afiliado con el CUIL ${dto.cuil}`,
+      );
     }
 
     // Verificar si ya existe un afiliado con el mismo número de afiliado
-    const existingNumber = await this.afiliadoRepository.findByAffiliateNumber(dto.affiliateNumber);
+    const existingNumber = await this.afiliadoRepository.findByAffiliateNumber(
+      dto.affiliateNumber,
+    );
     if (existingNumber) {
-      throw new ConflictException(`Ya existe un afiliado con el número ${dto.affiliateNumber}`);
+      throw new ConflictException(
+        `Ya existe un afiliado con el número ${dto.affiliateNumber}`,
+      );
     }
 
     // Hashear la contraseña
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const afiliado = Afiliado.create({
-      street: '',  // Estos campos son requeridos por el nuevo método create
-      afiliadoId: undefined,  // Se generará uno nuevo
-      addresses: []  // Sin direcciones inicialmente
+      street: '', // Estos campos son requeridos por el nuevo método create
+      afiliadoId: undefined, // Se generará uno nuevo
+      addresses: [], // Sin direcciones inicialmente
     });
 
     // Actualizamos los campos con los valores del DTO
@@ -77,11 +92,11 @@ export class AfiliadoService {
       dto.occupation || null,
       dto.phone || null,
       dto.picture || null,
-      null,  // signedTycVersion
-      null,  // signedTycDate
+      null, // signedTycVersion
+      null, // signedTycDate
       dto.primaryAddressId || null,
-      createdBy || SYSTEM_UUID,  // createdBy - UUID del usuario logueado o sistema
-      null  // updatedBy
+      createdBy || SYSTEM_UUID, // createdBy - UUID del usuario logueado o sistema
+      null, // updatedBy
     );
 
     const savedAfiliado = await this.afiliadoRepository.save(updatedAfiliado);
@@ -89,21 +104,32 @@ export class AfiliadoService {
     // Asociar con obras sociales si se proporcionaron
     if (dto.healthcareProviderIds && dto.healthcareProviderIds.length > 0) {
       for (const healthcareProviderId of dto.healthcareProviderIds) {
-        await this.afiliadoRepository.associateWithHealthcareProvider(savedAfiliado.id, healthcareProviderId);
+        await this.afiliadoRepository.associateWithHealthcareProvider(
+          savedAfiliado.id,
+          healthcareProviderId,
+        );
       }
     }
 
     return savedAfiliado;
   }
 
-  async update(affiliateId: string, dto: UpdateAfiliadoDto, updatedBy: string): Promise<Afiliado> {
+  async update(
+    affiliateId: string,
+    dto: UpdateAfiliadoDto,
+    updatedBy: string,
+  ): Promise<Afiliado> {
     const existingAfiliado = await this.findById(affiliateId);
 
     // Verificar email único si se está actualizando
     if (dto.email && dto.email !== existingAfiliado.email) {
-      const existingEmail = await this.afiliadoRepository.findByEmail(dto.email);
+      const existingEmail = await this.afiliadoRepository.findByEmail(
+        dto.email,
+      );
       if (existingEmail) {
-        throw new ConflictException(`Ya existe un afiliado con el email ${dto.email}`);
+        throw new ConflictException(
+          `Ya existe un afiliado con el email ${dto.email}`,
+        );
       }
     }
 
@@ -111,15 +137,25 @@ export class AfiliadoService {
     if (dto.cuil && dto.cuil !== existingAfiliado.cuil) {
       const existingCuil = await this.afiliadoRepository.findByCuil(dto.cuil);
       if (existingCuil) {
-        throw new ConflictException(`Ya existe un afiliado con el CUIL ${dto.cuil}`);
+        throw new ConflictException(
+          `Ya existe un afiliado con el CUIL ${dto.cuil}`,
+        );
       }
     }
 
     // Verificar número de afiliado único si se está actualizando
-    if (dto.affiliateNumber && dto.affiliateNumber !== existingAfiliado.affiliateNumber) {
-      const existingNumber = await this.afiliadoRepository.findByAffiliateNumber(dto.affiliateNumber);
+    if (
+      dto.affiliateNumber &&
+      dto.affiliateNumber !== existingAfiliado.affiliateNumber
+    ) {
+      const existingNumber =
+        await this.afiliadoRepository.findByAffiliateNumber(
+          dto.affiliateNumber,
+        );
       if (existingNumber) {
-        throw new ConflictException(`Ya existe un afiliado con el número ${dto.affiliateNumber}`);
+        throw new ConflictException(
+          `Ya existe un afiliado con el número ${dto.affiliateNumber}`,
+        );
       }
     }
 
@@ -137,24 +173,32 @@ export class AfiliadoService {
       new Date(),
       dto.cuil || existingAfiliado.cuil,
       dto.cvu !== undefined ? dto.cvu : existingAfiliado.cvu,
-      dto.documentType !== undefined ? dto.documentType : existingAfiliado.documentType,
+      dto.documentType !== undefined
+        ? dto.documentType
+        : existingAfiliado.documentType,
       dto.documentNumber || existingAfiliado.documentNumber,
       dto.documentCountry || existingAfiliado.documentCountry,
       dto.gender !== undefined ? dto.gender : existingAfiliado.gender,
       dto.firstName || existingAfiliado.firstName,
       dto.lastName || existingAfiliado.lastName,
       dto.birthDate || existingAfiliado.birthDate,
-      dto.nationality !== undefined ? dto.nationality : existingAfiliado.nationality,
+      dto.nationality !== undefined
+        ? dto.nationality
+        : existingAfiliado.nationality,
       dto.email || existingAfiliado.email,
       passwordHash,
-      dto.occupation !== undefined ? dto.occupation : existingAfiliado.occupation,
+      dto.occupation !== undefined
+        ? dto.occupation
+        : existingAfiliado.occupation,
       dto.phone !== undefined ? dto.phone : existingAfiliado.phone,
       dto.picture !== undefined ? dto.picture : existingAfiliado.picture,
       existingAfiliado.signedTycVersion,
       existingAfiliado.signedTycDate,
-      dto.primaryAddressId !== undefined ? dto.primaryAddressId : existingAfiliado.primaryAddressId,
+      dto.primaryAddressId !== undefined
+        ? dto.primaryAddressId
+        : existingAfiliado.primaryAddressId,
       existingAfiliado.createdBy,
-      updatedBy || SYSTEM_UUID  // updatedBy - UUID del usuario logueado o sistema
+      updatedBy || SYSTEM_UUID, // updatedBy - UUID del usuario logueado o sistema
     );
 
     const savedAfiliado = await this.afiliadoRepository.update(updatedAfiliado);
@@ -162,19 +206,28 @@ export class AfiliadoService {
     // Actualizar asociaciones con obras sociales si se proporcionaron
     if (dto.healthcareProviderIds !== undefined) {
       // Obtener las obras sociales actualmente asociadas
-      const currentHealthcareProviderIds = await this.afiliadoRepository.getHealthcareProvidersAssociated(affiliateId);
+      const currentHealthcareProviderIds =
+        await this.afiliadoRepository.getHealthcareProvidersAssociated(
+          affiliateId,
+        );
 
       // Desasociar obras sociales que ya no están seleccionadas
       for (const currentId of currentHealthcareProviderIds) {
         if (!dto.healthcareProviderIds.includes(currentId)) {
-          await this.afiliadoRepository.dissociateFromHealthcareProvider(affiliateId, currentId);
+          await this.afiliadoRepository.dissociateFromHealthcareProvider(
+            affiliateId,
+            currentId,
+          );
         }
       }
 
       // Asociar nuevas obras sociales
       for (const healthcareProviderId of dto.healthcareProviderIds) {
         if (!currentHealthcareProviderIds.includes(healthcareProviderId)) {
-          await this.afiliadoRepository.associateWithHealthcareProvider(affiliateId, healthcareProviderId);
+          await this.afiliadoRepository.associateWithHealthcareProvider(
+            affiliateId,
+            healthcareProviderId,
+          );
         }
       }
     }
@@ -186,4 +239,4 @@ export class AfiliadoService {
     await this.findById(affiliateId);
     await this.afiliadoRepository.delete(affiliateId);
   }
-} 
+}

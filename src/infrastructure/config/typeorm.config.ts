@@ -32,6 +32,7 @@ import { EffectorRequestAttachmentEntity } from '../entities/effector-request-at
 import { EffectorRequestStateEntity } from '../entities/effector-request-state.entity';
 // Activity Log entity
 import { ActivityLogEntity } from '../entities/activity-log.entity';
+import { OcrDocument } from '../../entities/ocr-document.entity';
 import { join } from 'path';
 
 
@@ -82,7 +83,9 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     EffectorRequestAttachmentEntity,
     EffectorRequestStateEntity,
     // Activity Log entity
-    ActivityLogEntity
+    ActivityLogEntity,
+    // OCR entity
+    OcrDocument
   ],
   migrations: [join(__dirname, '../persistence/postgres/migrations/*.{ts,js}')],
   synchronize: false, // Disabled to prevent automatic schema changes
