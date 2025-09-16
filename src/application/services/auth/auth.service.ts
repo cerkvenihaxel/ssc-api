@@ -16,6 +16,7 @@ import { LoginSuccessDto, UserInfoDto } from '../../../api/v1/auth/dtos/user-inf
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private resend: Resend;
 
   constructor(
     @Inject('IUserRepository')
@@ -25,17 +26,16 @@ export class AuthService {
     @Inject('IUserSessionRepository')
     private readonly sessionRepository: IUserSessionRepository,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
-    private readonly resend: Resend,
-    private readonly routeService: RouteService,
+  private readonly configService: ConfigService,
+  private readonly routeService: RouteService,
   ) {
     // Limpiar sesiones expiradas cada hora
     setInterval(() => {
       this.cleanupExpiredSessions();
     }, 60 * 60 * 1000);
 
-    // Inicializar Resend con la API key del .env
-    this.resend = new Resend(this.configService.get('RESEND_API_KEY'));
+  // Inicializar Resend con la API key del .env
+  this.resend = new Resend(this.configService.get('RESEND_API_KEY'));
   }
 
   async sendMagicLink(email: string, clientInfo?: any): Promise<{ message: string }> {
