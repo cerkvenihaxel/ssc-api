@@ -26,7 +26,7 @@ export class AuthService {
     private readonly sessionRepository: IUserSessionRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  private readonly resend: Resend,
+    private readonly resend: Resend,
     private readonly routeService: RouteService,
   ) {
     // Limpiar sesiones expiradas cada hora
