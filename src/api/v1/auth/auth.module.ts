@@ -29,28 +29,39 @@ import { Pool } from 'pg';
     }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        transport: {
-          host: configService.get('MAIL_HOST'),
-          port: configService.get('MAIL_PORT'),
-          secure: false, // true para 465, false para otros puertos
-          auth: {
-            user: configService.get('MAIL_USERNAME'),
-            pass: configService.get('MAIL_PASSWORD'),
-          },
-        },
-        defaults: {
-          from: `"${configService.get('MAIL_FROM_NAME')}" <${configService.get('MAIL_FROM_ADDRESS')}>`,
-        },
-        template: {
-          dir: process.cwd() + '/templates',
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
-      }),
       inject: [ConfigService],
+      useFactory: async (config: ConfigService) => {
+        const port = Number(config.get('MAIL_PORT')) || 587;
+        const encryption = (config.get<string>('MAIL_ENCRYPTION') || 'tls').toLowerCase();
+        const secure = encryption === 'ssl' || port === 465; // true solo si 465/SSL
+
+        return {
+          transport: {
+            host: config.get('MAIL_HOST'), // p.ej. smtp.gmail.com
+            port: port,
+            secure: secure, // 587->false (STARTTLS), 465->true (TLS directo)
+            auth: {
+              user: config.get('MAIL_USERNAME'),
+              pass: config.get('MAIL_PASSWORD'),
+            },
+            family: 4, // fuerza IPv4 (evita resolución IPv6)
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 20000,
+            tls: {
+              rejectUnauthorized: true, // dejalo true en prod
+            },
+          },
+          defaults: {
+            from: `${config.get('MAIL_FROM_NAME')} <${config.get('MAIL_FROM_ADDRESS')}>`,
+          },
+          template: {
+            dir: process.cwd() + '/templates',
+            adapter: new HandlebarsAdapter(),
+            options: { strict: true },
+          },
+        };
+      },
     }),
   ],
   controllers: [AuthController],
