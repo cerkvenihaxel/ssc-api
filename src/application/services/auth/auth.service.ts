@@ -7,7 +7,7 @@ import { MagicLink } from '../../../domain/models/magiclink/magic-link.model';
 import { User } from '../../../domain/models/user/user.model';
 import { UserSession, ClientInfo } from '../../../domain/models/session/user-session.model';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
+import { MailerService } from '@nestjs-modules/mailer';
 import { v4 as uuidv4 } from 'uuid';
 import { RouteService } from './route.service';
 import { FingerprintUtil } from '../../../shared/utils/fingerprint.util';
@@ -16,7 +16,7 @@ import { LoginSuccessDto, UserInfoDto } from '../../../api/v1/auth/dtos/user-inf
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private resend: Resend;
+  // ...existing code...
 
   constructor(
     @Inject('IUserRepository')
@@ -27,6 +27,7 @@ export class AuthService {
     private readonly sessionRepository: IUserSessionRepository,
     private readonly jwtService: JwtService,
   private readonly configService: ConfigService,
+  private readonly mailerService: MailerService,
   private readonly routeService: RouteService,
   ) {
     // Limpiar sesiones expiradas cada hora
@@ -82,9 +83,9 @@ export class AuthService {
 
       // Enviar email usando Resend
       try {
-        await this.resend.emails.send({
-          from: 'no-reply@ssc.com',
+        await this.mailerService.sendMail({
           to: email,
+          from: 'vadahealthargentina@gmail.com',
           subject: 'Acceso al Sistema - SSC',
           html: `<p>Hola ${user.nombre},<br>Accede con este <a href="${magicLinkUrl}">enlace</a>. Válido por 15 minutos.</p>`
         });
