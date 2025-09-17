@@ -35,8 +35,7 @@ export class AuthService {
       this.cleanupExpiredSessions();
     }, 60 * 60 * 1000);
 
-  // Inicializar Resend con la API key del .env
-  this.resend = new Resend(this.configService.get('RESEND_API_KEY'));
+      // No se utiliza Resend, solo MailerService para el envío de mails
   }
 
   async sendMagicLink(email: string, clientInfo?: any): Promise<{ message: string }> {
