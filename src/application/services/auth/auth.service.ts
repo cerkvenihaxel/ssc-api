@@ -80,13 +80,19 @@ export class AuthService {
 
       const magicLinkUrl = `${this.configService.get('FRONTEND_URL')}/auth/verify?token=${magicLink.token}`;
 
-      // Enviar email usando Resend
+      // Enviar email usando template
       try {
         await this.mailerService.sendMail({
           to: email,
           from: 'vadahealthargentina@gmail.com',
           subject: 'Acceso al Sistema - SSC',
-          html: `<p>Hola ${user.nombre},<br>Accede con este <a href="${magicLinkUrl}">enlace</a>. Válido por 15 minutos.</p>`
+          template: 'magic-link',
+          context: {
+            nombre: user.nombre,
+            loginUrl: magicLinkUrl,
+            expirationMinutes: 15,
+            currentYear: new Date().getFullYear()
+          }
         });
         this.logger.log(`Magic link enviado a ${email}`);
       } catch (emailError) {
