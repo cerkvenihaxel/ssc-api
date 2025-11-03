@@ -79,7 +79,7 @@ export class AuthController {
 
     const permissions = await this.userRepository.getUserPermissions(user.userId);
     const userRole = await this.userRepository.getUserRole(user.userId);
-    const routeData = this.routeService.getRoutesByRole(userRole.name);
+    const routeData = this.routeService.getRoutesByRole(userRole.name, permissions);
 
     return {
       userId: user.userId,

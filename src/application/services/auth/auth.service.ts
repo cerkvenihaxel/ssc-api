@@ -181,7 +181,7 @@ export class AuthService {
       // Obtener información completa del usuario
       const userRole = await this.userRepository.getUserRole(user.userId);
       const permissions = await this.userRepository.getUserPermissions(user.userId);
-      const routeData = this.routeService.getRoutesByRole(userRole.name);
+      const routeData = this.routeService.getRoutesByRole(userRole.name, permissions);
 
       // Crear JWT token
       const payload = {

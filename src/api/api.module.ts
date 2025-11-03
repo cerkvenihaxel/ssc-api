@@ -15,6 +15,7 @@ import { MedicalOrdersModule } from './v1/medical-orders/medical-orders.module';
 import { EffectorRequestModule } from './v1/effector-requests/effector-request.module';
 import { ProviderQuotationsModule } from './v1/provider-quotations/provider-quotations.module';
 import { AuditorModule } from './v1/auditor/auditor.module';
+import { OcrModule } from './v1/ocr/ocr.module';
 import { typeOrmConfig } from '../infrastructure/config/typeorm.config';
 
 @Module({
@@ -33,7 +34,8 @@ import { typeOrmConfig } from '../infrastructure/config/typeorm.config';
     MedicalOrdersModule,
     EffectorRequestModule,
     ProviderQuotationsModule,
-    AuditorModule
+    AuditorModule,
+    OcrModule
   ],
   controllers: [HealthController],
 })

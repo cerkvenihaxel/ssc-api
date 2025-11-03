@@ -1,11 +1,23 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { MedicalOrderTypeOrmEntity } from '../infrastructure/entities/medical-order.typeorm-entity';
 import { AiItemAnalysis } from './ai-item-analysis.entity';
 import { AiRiskFactor } from './ai-risk-factor.entity';
 import { AiRecommendation } from './ai-recommendation.entity';
 import { AiCorrectionSuggestion } from './ai-correction-suggestion.entity';
 
-export type AnalysisDecision = 'approved' | 'rejected' | 'partial' | 'requires_review';
+export type AnalysisDecision =
+  | 'approved'
+  | 'rejected'
+  | 'partial'
+  | 'requires_review';
 export type AnalysisType = 'automatic' | 'fallback' | 'manual_review';
 
 @Entity('ai_medical_order_analyses')
@@ -17,19 +29,19 @@ export class AiMedicalOrderAnalysis {
   medicalOrderId: string;
 
   // Análisis General
-  @Column({ 
-    name: 'overall_decision', 
-    type: 'varchar', 
+  @Column({
+    name: 'overall_decision',
+    type: 'varchar',
     length: 20,
-    enum: ['approved', 'rejected', 'partial', 'requires_review']
+    enum: ['approved', 'rejected', 'partial', 'requires_review'],
   })
   overallDecision: AnalysisDecision;
 
-  @Column({ 
-    name: 'confidence_score', 
-    type: 'decimal', 
-    precision: 3, 
-    scale: 2 
+  @Column({
+    name: 'confidence_score',
+    type: 'decimal',
+    precision: 3,
+    scale: 2,
   })
   confidenceScore: number;
 
@@ -37,20 +49,20 @@ export class AiMedicalOrderAnalysis {
   reasoning: string;
 
   // Metadatos del Análisis
-  @Column({ 
-    name: 'ai_model_version', 
-    type: 'varchar', 
-    length: 50, 
-    default: 'gpt-4' 
+  @Column({
+    name: 'ai_model_version',
+    type: 'varchar',
+    length: 50,
+    default: 'gpt-4',
   })
   aiModelVersion: string;
 
-  @Column({ 
-    name: 'analysis_type', 
-    type: 'varchar', 
-    length: 20, 
+  @Column({
+    name: 'analysis_type',
+    type: 'varchar',
+    length: 20,
     default: 'automatic',
-    enum: ['automatic', 'fallback', 'manual_review']
+    enum: ['automatic', 'fallback', 'manual_review'],
   })
   analysisType: AnalysisType;
 
@@ -61,17 +73,22 @@ export class AiMedicalOrderAnalysis {
   @Column({ name: 'tokens_used', type: 'int', nullable: true })
   tokensUsed?: number;
 
-  @Column({ 
-    name: 'estimated_cost', 
-    type: 'decimal', 
-    precision: 10, 
-    scale: 4, 
-    nullable: true 
+  @Column({
+    name: 'estimated_cost',
+    type: 'decimal',
+    precision: 10,
+    scale: 4,
+    nullable: true,
   })
   estimatedCost?: number;
 
   // Información Contextual
-  @Column({ name: 'medical_specialty', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'medical_specialty',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   medicalSpecialty?: string;
 
   @Column({ name: 'urgency_level', type: 'int', nullable: true })
@@ -81,10 +98,10 @@ export class AiMedicalOrderAnalysis {
   totalItemsAnalyzed: number;
 
   // Timestamps
-  @Column({ 
-    name: 'analyzed_at', 
-    type: 'timestamp with time zone', 
-    default: () => 'NOW()' 
+  @Column({
+    name: 'analyzed_at',
+    type: 'timestamp with time zone',
+    default: () => 'NOW()',
   })
   analyzedAt: Date;
 
@@ -102,9 +119,15 @@ export class AiMedicalOrderAnalysis {
   @OneToMany(() => AiRiskFactor, (riskFactor) => riskFactor.analysis)
   riskFactors: AiRiskFactor[];
 
-  @OneToMany(() => AiRecommendation, (recommendation) => recommendation.analysis)
+  @OneToMany(
+    () => AiRecommendation,
+    (recommendation) => recommendation.analysis,
+  )
   recommendations: AiRecommendation[];
 
-  @OneToMany(() => AiCorrectionSuggestion, (suggestion) => suggestion.originalAnalysis)
+  @OneToMany(
+    () => AiCorrectionSuggestion,
+    (suggestion) => suggestion.originalAnalysis,
+  )
   correctionSuggestions: AiCorrectionSuggestion[];
-} 
+}

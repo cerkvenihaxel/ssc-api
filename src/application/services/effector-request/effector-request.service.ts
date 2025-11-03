@@ -159,10 +159,11 @@ export class EffectorRequestService {
     const analysis = await this.aiAnalysisService.analyzeEffectorRequest(request);
     
     // Optionally save the analysis result in the database
+    // Note: updated_by should be null for AI system operations since it requires a valid UUID
     await this.effectorRequestRepository.update(id, {
       ai_analysis_result: analysis as any,
       ai_analyzed_at: new Date(),
-      updated_by: 'AI_SYSTEM'
+      updated_by: null // Use null for AI system operations
     } as any);
 
     return analysis;
